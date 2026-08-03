@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="color-scheme" content="dark">
+  <link rel="dns-prefetch" href="//www.youtube.com">
+  <link rel="dns-prefetch" href="//i.ytimg.com">
+  <link rel="dns-prefetch" href="//www.googlevideo.com">
+  <link rel="preconnect" href="https://www.youtube.com">
+  <link rel="preconnect" href="https://i.ytimg.com">
+  <link rel="preconnect" href="https://www.googlevideo.com">
+  <link rel="preload" href="https://www.youtube.com/iframe_api" as="script">
+  <style>
+    html, body, #player { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #000; }
+    html, body { position: fixed; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+    * { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+    iframe { display: block; width: 100%; height: 100%; border: 0; }
+  </style>
+</head>
+<body>
+  <iframe id="player" src="{{EMBED_URL}}" title="{{TITLE}}"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; web-share"
+    referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+  <script>
+    var player = null;
+    var timerId = null;
+    var audioTimerId = null;
+    var playRequested = '{{AUTOPLAY}}' === 'true';
+    var shouldMute = '{{MUTED}}' === 'true';
+    var startSeconds = Math.max(0, Number('{{START_SECONDS}}') || 0);
+    var currentVideoId = '{{VIDEO_ID}}';
+
+    function sendEvent(name, data) {
+      var payload = { event: name, data: data === undefined ? null : data };
+      if (window.webkit && window.webkit.messageHandlers.youtubeEvent) {
+        window.webkit.messageHandlers.youtubeEvent.postMessage(payload);
+      } else if (window.YouTubeAndroid && window.YouTubeAndroid.postMessage) {
+        window.YouTubeAndroid.postMessage(JSON.stringify(payload));
+      }
+    }
+
+    function stopProgress() {
+      if (timerId !== null) clearInterval(timerId);
+      timerId = null;
+    }
+
+    function stopAudioRetry() {
+      if (audioTimerId !== null) clearInterval(audioTimerId);
+      audioTimerId = null;
+    }
+
+    function sendAudioState() {
+      if (!player) return;
+      sendEvent('AudioState', {
+        isMuted: player.isMuted(),
+        volume: player.getVolume()
+      });
+    }
+
+    function applyAudioPreference() {
+      if (!player) return false;
+      if (shouldMute) player.mute(); else player.unMute();
+      sendAudioState();
+      return true;
+    }
+
+    function retryAudioPreferenceAfterPlaybackStarts() {
+      stopAudioRetry();
+      applyAudioPreference();
+      if (shouldMute) return;
+      var retryCount = 0;
+      audioTimerId = setInterval(function () {
+        if (!player || shouldMute || player.getPlayerState() !== YT.PlayerState.PLAYING) {
+          stopAudioRetry();
+          return;
+        }
+        if (retryCount >= 4) {
+          stopAudioRetry();
+          return;
+        }
+        retryCount += 1;
+        applyAudioPreference();
+      }, 250);
+    }
+
+    function sendVideoData() {
+      if (!player) return;
+      var data = player.getVideoData() || {};
+      sendEvent('VideoData', {
+        duration: player.getDuration() || 0,
+        title: data.title || '',
+        author: data.author || '',
+        videoId: data.video_id || ''
+      });
+    }
+
+    function sendVideoTime() {
+      if (!player) return;
+      sendEvent('VideoTime', {
+        currentTime: player.getCurrentTime() || 0,
+        loadedFraction: player.getVideoLoadedFraction() || 0
+      });
+    }
+
+    function canCallPlayer(methodName) {
+      return player && typeof player[methodName] === 'function';
+    }
+
+    function closeCaptions() {
+      if (!canCallPlayer('setOption')) return;
+      try {
+        player.setOption('captions', 'track', {});
+      } catch (error) {
+        sendEvent('CaptionError', String(error));
+      }
+    }
+
+    function requestPlay() {
+      playRequested = true;
+      if (!player || typeof player.playVideo !== 'function') return false;
+      player.playVideo();
+      return true;
+    }
+
+    function requestPause() {
+      playRequested = false;
+      stopProgress();
+      stopAudioRetry();
+      if (!player || typeof player.pauseVideo !== 'function') return false;
+      player.pauseVideo();
+      return true;
+    }
+
+    function reloadCurrentVideo() {
+      if (!player || typeof player.loadVideoById !== 'function') return false;
+      playRequested = true;
+      player.loadVideoById({ videoId: currentVideoId });
+      return true;
+    }
+
+    function loadVideoById(videoId, autoplay, requestedStartSeconds, muted) {
+      if (!player || !videoId) return false;
+      stopProgress();
+      stopAudioRetry();
+      currentVideoId = videoId;
+      playRequested = autoplay !== false;
+      shouldMute = muted === true;
+      startSeconds = Math.max(0, Number(requestedStartSeconds) || 0);
+      var request = { videoId: videoId, startSeconds: startSeconds };
+      if (playRequested) player.loadVideoById(request);
+      else player.cueVideoById(request);
+      return true;
+    }
+
+    function seekTo(seconds, seekAhead) {
+      if (!player || typeof player.seekTo !== 'function') return false;
+      player.seekTo(Number(seconds) || 0, seekAhead !== false);
+      return true;
+    }
+
+    function mute() {
+      shouldMute = true;
+      stopAudioRetry();
+      if (!player || typeof player.mute !== 'function') return false;
+      player.mute();
+      sendAudioState();
+      return true;
+    }
+
+    function unMute() {
+      shouldMute = false;
+      if (!player || typeof player.unMute !== 'function') return false;
+      player.unMute();
+      if (player.getPlayerState() === YT.PlayerState.PLAYING) {
+        retryAudioPreferenceAfterPlaybackStarts();
+      } else {
+        sendAudioState();
+      }
+      return true;
+    }
+
+    function setVolume(volume) {
+      if (!player || typeof player.setVolume !== 'function') return false;
+      player.setVolume(Math.max(0, Math.min(100, Number(volume) || 0)));
+      sendAudioState();
+      return true;
+    }
+
+    function setPlaybackRate(rate) {
+      if (!player || typeof player.setPlaybackRate !== 'function') return false;
+      player.setPlaybackRate(Number(rate) || 1);
+      return true;
+    }
+
+    function exitFullscreen() {
+      if (document.exitFullscreen) document.exitFullscreen();
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      return true;
+    }
+
+    function sendFullscreenState() {
+      sendEvent('FullscreenChange', !!(
+        document.fullscreenElement || document.webkitFullscreenElement
+      ));
+    }
+
+    function onYouTubeIframeAPIReady() {
+      if (player) return;
+      player = new YT.Player('player', {
+        events: {
+          onReady: function () {
+            closeCaptions();
+            applyAudioPreference();
+            sendEvent('Ready');
+            if (playRequested) player.playVideo(); else player.pauseVideo();
+            setTimeout(function () { sendVideoData(); sendVideoTime(); }, 0);
+          },
+          onAutoplayBlocked: function () { sendEvent('AutoplayBlocked'); },
+          onApiChange: closeCaptions,
+          onPlaybackQualityChange: function (event) {
+            sendEvent('PlaybackQualityChange', event.data);
+          },
+          onPlaybackRateChange: function (event) {
+            sendEvent('PlaybackRateChange', event.data);
+          },
+          onStateChange: function (event) {
+            stopProgress();
+            sendEvent('StateChange', event.data);
+            sendVideoTime();
+            if (event.data === YT.PlayerState.PLAYING) {
+              retryAudioPreferenceAfterPlaybackStarts();
+              sendVideoData();
+              timerId = setInterval(sendVideoTime, 250);
+            }
+          },
+          onError: function (event) { stopProgress(); sendEvent('Error', event.data); }
+        }
+      });
+    }
+
+    window.addEventListener('pagehide', function () {
+      stopProgress();
+      stopAudioRetry();
+    });
+    document.addEventListener('fullscreenchange', sendFullscreenState);
+    document.addEventListener('webkitfullscreenchange', sendFullscreenState);
+    document.addEventListener('contextmenu', function (event) { event.preventDefault(); }, true);
+    document.addEventListener('selectstart', function (event) { event.preventDefault(); }, true);
+    document.addEventListener('dragstart', function (event) { event.preventDefault(); }, true);
+    document.addEventListener('touchcallout', function (event) { event.preventDefault(); }, true);
+    var script = document.createElement('script');
+    script.src = 'https://www.youtube.com/iframe_api';
+    script.async = true;
+    script.referrerPolicy = 'strict-origin-when-cross-origin';
+    document.head.appendChild(script);
+  </script>
+</body>
+</html>
