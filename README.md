@@ -21,7 +21,6 @@ AspectRatio(
   aspectRatio: 16 / 9,
   child: FlutterYouTubePlayer(
     controller: controller,
-    showPlayPauseButton: true,
   ),
 );
 
@@ -46,10 +45,6 @@ new channel activates the requested video before queued commands are replayed.
 Before playback starts, the player automatically displays YouTube's high
 resolution thumbnail derived from the current video ID. Other thumbnail sizes
 are available through `ThumbnailSet(videoId)`.
-
-By default, the player displays a centered play/pause button that follows the
-IFrame player state. Set `showPlayPauseButton: false` when providing a custom
-playback control surface.
 
 Listen to the controller for ready, playback, buffer, loading, autoplay and
 error state changes. The value also exposes the video title, author, playback

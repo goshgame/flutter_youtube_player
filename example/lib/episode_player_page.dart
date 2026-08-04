@@ -185,6 +185,16 @@ class _PlayerControls extends StatelessWidget {
           children: [
             const SizedBox(width: 8),
             IconButton(
+              tooltip: '播放',
+              onPressed: controller.play,
+              icon: const Icon(Icons.play_arrow),
+            ),
+            IconButton(
+              tooltip: '暂停',
+              onPressed: controller.pause,
+              icon: const Icon(Icons.pause),
+            ),
+            IconButton(
               tooltip: value.isMuted ? '取消静音' : '静音',
               onPressed: value.isMuted ? controller.unmute : controller.mute,
               icon: Icon(value.isMuted ? Icons.volume_off : Icons.volume_up),
