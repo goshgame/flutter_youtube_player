@@ -549,15 +549,19 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
     with WidgetsBindingObserver {
   // 延迟显示进度指示器，避免加载很快时出现短暂闪烁。
   static const _loadingIndicatorDelay = Duration(milliseconds: 120);
+  static const _playPauseButtonVisibilityDuration = Duration(seconds: 4);
 
   late int _viewGeneration;
   late Key _platformViewKey;
   Timer? _loadingIndicatorTimer;
+  Timer? _playPauseButtonTimer;
   Animation<double>? _routeAnimation;
   Animation<double>? _secondaryRouteAnimation;
   late String _videoId;
+  YouTubePlayerState? _playPauseButtonState;
   bool _isInitialOverlayVisible = false;
   bool _isLoadingIndicatorVisible = false;
+  bool _isPlayPauseButtonVisible = false;
   bool _hasPlaybackStarted = false;
   bool _isAppSuspended = false;
   bool _isRouteExiting = false;
@@ -576,6 +580,7 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
     widget.controller.addListener(_handleControllerChange);
     WidgetsBinding.instance.addObserver(this);
     _syncLoadingIndicatorVisibility();
+    _syncPlayPauseButtonVisibility(notify: false);
     _syncNativeSuspension();
   }
 
@@ -614,11 +619,16 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
     _platformViewKey = UniqueKey();
     _loadingIndicatorTimer?.cancel();
     _loadingIndicatorTimer = null;
+    _playPauseButtonTimer?.cancel();
+    _playPauseButtonTimer = null;
+    _playPauseButtonState = null;
+    _isPlayPauseButtonVisible = false;
     _isInitialOverlayVisible = false;
     _isLoadingIndicatorVisible = false;
     _resetPlaybackState();
     widget.controller.addListener(_handleControllerChange);
     _syncLoadingIndicatorVisibility();
+    _syncPlayPauseButtonVisibility(notify: false);
     _isNativeSuspended = false;
     _syncNativeSuspension();
   }
@@ -646,6 +656,7 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
       _hasPlaybackStarted = true;
     }
     _syncLoadingIndicatorVisibility();
+    _syncPlayPauseButtonVisibility();
   }
 
   void _resetPlaybackState() {
@@ -688,6 +699,32 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
     });
   }
 
+  void _syncPlayPauseButtonVisibility({bool notify = true}) {
+    final state = widget.controller.value.state;
+    if (_playPauseButtonState == state) return;
+
+    _playPauseButtonState = state;
+    _playPauseButtonTimer?.cancel();
+    _playPauseButtonTimer = null;
+    final shouldShow =
+        state == YouTubePlayerState.playing ||
+        state == YouTubePlayerState.paused;
+    if (notify && mounted) {
+      setState(() => _isPlayPauseButtonVisible = shouldShow);
+    } else {
+      _isPlayPauseButtonVisible = shouldShow;
+    }
+
+    if (state != YouTubePlayerState.playing) return;
+    _playPauseButtonTimer = Timer(_playPauseButtonVisibilityDuration, () {
+      _playPauseButtonTimer = null;
+      if (!mounted || _playPauseButtonState != YouTubePlayerState.playing) {
+        return;
+      }
+      setState(() => _isPlayPauseButtonVisible = false);
+    });
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _isAppSuspended = state != AppLifecycleState.resumed;
@@ -723,6 +760,7 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
   @override
   void dispose() {
     _loadingIndicatorTimer?.cancel();
+    _playPauseButtonTimer?.cancel();
     _routeAnimation?.removeStatusListener(_handleRouteAnimationStatus);
     _secondaryRouteAnimation?.removeStatusListener(
       _handleSecondaryRouteAnimationStatus,
@@ -774,7 +812,7 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
                 child: _PlayerLoadingIndicator(key: ValueKey('player-loading')),
               ),
             ),
-          if (widget.showPlayPauseButton)
+          if (widget.showPlayPauseButton && _isPlayPauseButtonVisible)
             ValueListenableBuilder<YouTubePlayerValue>(
               valueListenable: widget.controller,
               builder: (context, value, _) {

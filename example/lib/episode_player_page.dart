@@ -189,6 +189,16 @@ class _PlayerControls extends StatelessWidget {
               onPressed: value.isMuted ? controller.unmute : controller.mute,
               icon: Icon(value.isMuted ? Icons.volume_off : Icons.volume_up),
             ),
+            IconButton(
+              tooltip: '播放',
+              onPressed: controller.play,
+              icon: const Icon(Icons.play_arrow),
+            ),
+            IconButton(
+              tooltip: '暂停',
+              onPressed: controller.pause,
+              icon: const Icon(Icons.pause),
+            ),
             PopupMenuButton<double>(
               tooltip: '播放速度',
               icon: const Icon(Icons.speed),

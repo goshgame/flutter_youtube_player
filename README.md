@@ -48,8 +48,9 @@ resolution thumbnail derived from the current video ID. Other thumbnail sizes
 are available through `ThumbnailSet(videoId)`.
 
 By default, the player displays a centered play/pause button that follows the
-IFrame player state. Set `showPlayPauseButton: false` when providing a custom
-playback control surface.
+IFrame player state. The play button remains visible while paused; the pause
+button hides four seconds after playback starts. Set
+`showPlayPauseButton: false` when providing a custom playback control surface.
 
 Listen to the controller for ready, playback, buffer, loading, autoplay and
 error state changes. The value also exposes the video title, author, playback

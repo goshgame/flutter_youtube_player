@@ -244,15 +244,22 @@ void main() {
     await tester.tap(button);
     await tester.pump();
     expect(calls, contains('pause'));
+    await tester.pump(const Duration(milliseconds: 3999));
+    expect(button, findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 1));
+    expect(button, findsNothing);
 
     controller.value = controller.value.copyWith(
       state: YouTubePlayerState.paused,
     );
     await tester.pump();
+    expect(button, findsOneWidget);
     expect(
       (buttonImage().image as AssetImage).assetName,
       'assets/icons/player_play.png',
     );
+    await tester.pump(const Duration(seconds: 8));
+    expect(button, findsOneWidget);
 
     await tester.tap(button);
     await tester.pump();
