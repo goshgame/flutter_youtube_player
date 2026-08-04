@@ -527,12 +527,16 @@ class FlutterYouTubePlayer extends StatefulWidget {
   const FlutterYouTubePlayer({
     required this.controller,
     this.backgroundColor = Colors.black,
+    this.showPlayPauseButton = true,
     this.gestureRecognizers = const <Factory<OneSequenceGestureRecognizer>>{},
     super.key,
   });
 
   final FlutterYouTubePlayerController controller;
   final Color backgroundColor;
+
+  /// 是否在播放器中央显示跟随 YouTube 状态切换的播放/暂停按钮。
+  final bool showPlayPauseButton;
 
   /// 交由原生平台视图处理的手势识别器集合。
   final Set<Factory<OneSequenceGestureRecognizer>> gestureRecognizers;
@@ -770,7 +774,65 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
                 child: _PlayerLoadingIndicator(key: ValueKey('player-loading')),
               ),
             ),
+          if (widget.showPlayPauseButton)
+            ValueListenableBuilder<YouTubePlayerValue>(
+              valueListenable: widget.controller,
+              builder: (context, value, _) {
+                final isPlaying = value.state == YouTubePlayerState.playing;
+                final isPaused = value.state == YouTubePlayerState.paused;
+                if (!isPlaying && !isPaused) return const SizedBox.shrink();
+
+                return Center(
+                  child: _PlayerPlayPauseButton(
+                    isPlaying: isPlaying,
+                    onPressed: () {
+                      unawaited(
+                        isPlaying
+                            ? widget.controller.pause()
+                            : widget.controller.play(),
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
         ],
+      ),
+    );
+  }
+}
+
+class _PlayerPlayPauseButton extends StatelessWidget {
+  const _PlayerPlayPauseButton({
+    required this.isPlaying,
+    required this.onPressed,
+  });
+
+  final bool isPlaying;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = isPlaying ? '暂停' : '播放';
+    return Material(
+      key: const ValueKey('player-play-pause'),
+      color: const Color.fromRGBO(0, 0, 0, 0.3),
+      shape: const CircleBorder(),
+      clipBehavior: Clip.antiAlias,
+      child: IconButton(
+        tooltip: label,
+        constraints: const BoxConstraints.tightFor(width: 56, height: 56),
+        padding: const EdgeInsets.all(10),
+        onPressed: onPressed,
+        icon: Image.asset(
+          isPlaying
+              ? 'assets/icons/player_pause.png'
+              : 'assets/icons/player_play.png',
+          package: 'flutter_youtube_player',
+          width: 36,
+          height: 36,
+          excludeFromSemantics: true,
+        ),
       ),
     );
   }
