@@ -536,6 +536,8 @@ class FlutterYouTubePlayer extends StatefulWidget {
   final Color backgroundColor;
 
   /// 是否在播放器中央显示跟随 YouTube 状态切换的播放/暂停按钮。
+  ///
+  /// 默认为 `true`；使用自定义播放控件时可设为 `false`。
   final bool showPlayPauseButton;
 
   /// 交由原生平台视图处理的手势识别器集合。
