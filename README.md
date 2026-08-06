@@ -36,6 +36,7 @@ await controller.load(
 await controller.mute();
 await controller.setVolume(70);
 await controller.setPlaybackRate(1.5);
+await controller.openInYouTube();
 ```
 
 The widget pauses its native player while the app is inactive, while its route
@@ -58,6 +59,12 @@ quality, playback rate, volume, mute and fullscreen state. Call
 `controller.reinitialize()` to explicitly rebuild the native player; renderer
 process failures trigger this automatically. Dispose the controller with its
 owning widget.
+
+IFrame errors 101 and 150 indicate that the video owner disabled embedding.
+The widget replaces the player with a dedicated message and an action that
+opens the current video in the YouTube app or system browser. Native playback
+and loading errors uncover the WebView instead of leaving its black loading
+surface visible.
 
 The bundled page uses `http://example.com` as a non-network base origin and
 keeps the real platform WebView user agent. Together they provide the Referer

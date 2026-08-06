@@ -16,6 +16,9 @@ class EpisodePlayerPage extends StatefulWidget {
 
 class _EpisodePlayerPageState extends State<EpisodePlayerPage> {
   late final FlutterYouTubePlayerController _playerController;
+  late final TextEditingController _videoIdController;
+  String? _videoIdError;
+  bool _isLoadingVideo = false;
 
   @override
   void initState() {
@@ -24,12 +27,36 @@ class _EpisodePlayerPageState extends State<EpisodePlayerPage> {
       initialVideoId: widget.episode.videoId,
       autoPlay: true,
     );
+    _videoIdController = TextEditingController(text: widget.episode.videoId);
   }
 
   @override
   void dispose() {
+    _videoIdController.dispose();
     _playerController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadVideo() async {
+    if (_isLoadingVideo) return;
+    final videoId = _videoIdController.text.trim();
+    if (!FlutterYouTubePlayerController.isValidVideoId(videoId)) {
+      setState(() => _videoIdError = '请输入有效的 11 位 YouTube 视频 ID');
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _videoIdError = null;
+      _isLoadingVideo = true;
+    });
+    try {
+      await _playerController.load(videoId);
+    } catch (_) {
+      if (mounted) setState(() => _videoIdError = '视频加载失败，请稍后重试');
+    } finally {
+      if (mounted) setState(() => _isLoadingVideo = false);
+    }
   }
 
   @override
@@ -43,6 +70,46 @@ class _EpisodePlayerPageState extends State<EpisodePlayerPage> {
             _PlayerSurface(controller: _playerController),
             _PlaybackProgress(controller: _playerController),
             _PlayerControls(controller: _playerController),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+              child: TextField(
+                key: const ValueKey('youtube-video-id-input'),
+                controller: _videoIdController,
+                autocorrect: false,
+                enableSuggestions: false,
+                maxLines: 1,
+                textInputAction: TextInputAction.go,
+                decoration: InputDecoration(
+                  labelText: 'YouTube 视频 ID',
+                  hintText: '例如：lOnDRI_G3tg',
+                  errorText: _videoIdError,
+                  border: const OutlineInputBorder(),
+                  suffixIcon: _isLoadingVideo
+                      ? const Padding(
+                          padding: EdgeInsets.all(14),
+                          child: SizedBox.square(
+                            dimension: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                      : IconButton(
+                          key: const ValueKey('load-youtube-video'),
+                          tooltip: '加载并播放',
+                          onPressed: _loadVideo,
+                          icon: const Icon(Icons.play_arrow),
+                        ),
+                ),
+                onChanged: (videoId) {
+                  if (_videoIdError != null &&
+                      FlutterYouTubePlayerController.isValidVideoId(
+                        videoId.trim(),
+                      )) {
+                    setState(() => _videoIdError = null);
+                  }
+                },
+                onSubmitted: (_) => unawaited(_loadVideo()),
+              ),
+            ),
             const Divider(height: 1),
             Padding(
               padding: const EdgeInsets.all(16),

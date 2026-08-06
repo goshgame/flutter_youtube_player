@@ -300,6 +300,54 @@ void main() {
     debugDefaultTargetPlatformOverride = null;
   });
 
+  testWidgets('shows an externally provided embedding-disabled overlay', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    final controller = FlutterYouTubePlayerController(
+      initialVideoId: 'r9UYbCxus3s',
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SizedBox(
+          width: 400,
+          height: 225,
+          child: FlutterYouTubePlayer(
+            controller: controller,
+            embeddingDisabledOverlay: const ColoredBox(
+              key: ValueKey('custom-embedding-disabled'),
+              color: Colors.red,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      find.byKey(const ValueKey('custom-embedding-disabled')),
+      findsNothing,
+    );
+
+    controller.value = controller.value.copyWith(errorCode: 101);
+    await tester.pump();
+    expect(
+      find.byKey(const ValueKey('custom-embedding-disabled')),
+      findsOneWidget,
+    );
+
+    controller.value = controller.value.copyWith(errorCode: 2);
+    await tester.pump();
+    expect(
+      find.byKey(const ValueKey('custom-embedding-disabled')),
+      findsNothing,
+    );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    controller.dispose();
+    debugDefaultTargetPlatformOverride = null;
+  });
+
   testWidgets('suspends the native player before a route pop animation', (
     tester,
   ) async {

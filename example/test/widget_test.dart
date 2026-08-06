@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_youtube_player/flutter_youtube_player.dart';
 import 'package:flutter_youtube_player_example/episode.dart';
+import 'package:flutter_youtube_player_example/episode_player_page.dart';
 import 'package:flutter_youtube_player_example/episode_repository.dart';
 import 'package:flutter_youtube_player_example/main.dart';
 
@@ -62,6 +63,38 @@ void main() {
 
     await tester.tap(find.text('Morning News'));
     expect(navigatorObserver.pushCount, 2);
+  });
+
+  testWidgets('episode player validates an entered YouTube video ID', (
+    tester,
+  ) async {
+    const episode = Episode(
+      id: 1,
+      videoId: 'CoihJCn01Rk',
+      title: 'Morning News',
+      duration: '20:06',
+      podcast: 'NBC News',
+    );
+    await tester.pumpWidget(
+      const MaterialApp(home: EpisodePlayerPage(episode: episode)),
+    );
+    await tester.drag(find.byType(ListView), const Offset(0, -300));
+    await tester.pump();
+
+    final input = find.byKey(const ValueKey('youtube-video-id-input'));
+    expect(input, findsOneWidget);
+    expect(find.text('CoihJCn01Rk'), findsOneWidget);
+
+    await tester.enterText(input, 'invalid');
+    await tester.tap(find.byKey(const ValueKey('load-youtube-video')));
+    await tester.pump();
+    expect(find.text('请输入有效的 11 位 YouTube 视频 ID'), findsOneWidget);
+
+    await tester.enterText(input, 'lOnDRI_G3tg');
+    await tester.pump();
+    expect(find.text('请输入有效的 11 位 YouTube 视频 ID'), findsNothing);
+
+    await tester.pumpWidget(const SizedBox.shrink());
   });
 }
 

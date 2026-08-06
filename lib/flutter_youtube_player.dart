@@ -100,6 +100,7 @@ class YouTubePlayerValue {
 
   bool get hasError => errorCode != null || errorMessage != null;
   bool get isPlaying => state == YouTubePlayerState.playing;
+  bool get isEmbeddingDisabled => errorCode == 101 || errorCode == 150;
 
   /// 创建包含指定变更的新快照。
   ///
@@ -322,6 +323,9 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
   Future<void> resume() => _invoke('resume');
   Future<void> exitFullscreen() => _invoke('exitFullscreen');
 
+  /// 使用系统支持的 YouTube 应用或浏览器打开当前视频。
+  Future<void> openInYouTube() => _invoke('openInYouTube');
+
   Future<void> mute() {
     _wantsMuted = true;
     value = value.copyWith(isMuted: true);
@@ -455,8 +459,9 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
         final code = (event['code'] as num?)?.toInt();
         value = value.copyWith(
           errorCode: code,
-          errorMessage:
-              'YouTube playback error${code == null ? '' : ' ($code)'}',
+          errorMessage: code == 101 || code == 150
+              ? 'Video embedding is disabled by the owner'
+              : 'YouTube playback error${code == null ? '' : ' ($code)'}',
         );
       case 'loadError':
         value = value.copyWith(
@@ -528,6 +533,7 @@ class FlutterYouTubePlayer extends StatefulWidget {
     required this.controller,
     this.backgroundColor = Colors.black,
     this.showPlayPauseButton = true,
+    this.embeddingDisabledOverlay,
     this.gestureRecognizers = const <Factory<OneSequenceGestureRecognizer>>{},
     super.key,
   });
@@ -539,6 +545,11 @@ class FlutterYouTubePlayer extends StatefulWidget {
   ///
   /// 默认为 `true`；使用自定义播放控件时可设为 `false`。
   final bool showPlayPauseButton;
+
+  /// 禁止嵌入时覆盖在播放器上的自定义内容。
+  ///
+  /// 默认不显示覆盖内容。
+  final Widget? embeddingDisabledOverlay;
 
   /// 交由原生平台视图处理的手势识别器集合。
   final Set<Factory<OneSequenceGestureRecognizer>> gestureRecognizers;
@@ -813,6 +824,14 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
               child: Center(
                 child: _PlayerLoadingIndicator(key: ValueKey('player-loading')),
               ),
+            ),
+          if (widget.embeddingDisabledOverlay != null)
+            ValueListenableBuilder<YouTubePlayerValue>(
+              valueListenable: widget.controller,
+              child: widget.embeddingDisabledOverlay,
+              builder: (_, value, overlay) => value.isEmbeddingDisabled
+                  ? overlay!
+                  : const SizedBox.shrink(),
             ),
           if (widget.showPlayPauseButton && _isPlayPauseButtonVisible)
             ValueListenableBuilder<YouTubePlayerValue>(

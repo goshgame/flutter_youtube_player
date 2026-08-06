@@ -2,7 +2,9 @@ package com.podoc.flutter_youtube_player
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.Uri
@@ -184,6 +186,12 @@ internal class NativePlayerView(
         if (rate.isFinite() && rate > 0) evaluate("setPlaybackRate($rate)")
       }
       "exitFullscreen" -> hideCustomView()
+      "openInYouTube" -> {
+        if (!openInYouTube()) {
+          result.error("open_failed", "Unable to open this video in YouTube", null)
+          return
+        }
+      }
       else -> {
         result.notImplemented()
         return
@@ -257,6 +265,7 @@ internal class NativePlayerView(
         it.readText().also { source -> cachedTemplate = source }
       }
     } catch (error: Exception) {
+      hideLoadingCover()
       event("loadError", "message" to "Unable to read player template: ${error.message}")
       null
     }
@@ -369,7 +378,10 @@ internal class NativePlayerView(
           )
         }
         "FullscreenChange" -> event("fullscreen", "value" to payload.optBoolean("data", false))
-        "Error" -> event("youtubeError", "code" to payload.optInt("data"))
+        "Error" -> {
+          hideLoadingCover()
+          event("youtubeError", "code" to payload.optInt("data"))
+        }
       }
     } catch (error: Exception) {
       // 桥接数据只应来自内置页面；记录异常便于定位页面与原生协议不一致。
@@ -385,6 +397,10 @@ internal class NativePlayerView(
 
   private fun showLoadingCover() {
     loadingCover.visibility = View.VISIBLE
+  }
+
+  private fun hideLoadingCover() {
+    loadingCover.visibility = View.GONE
   }
 
   fun destroy() {
@@ -429,6 +445,7 @@ internal class NativePlayerView(
       if (request.isForMainFrame) {
         prepared = false
         ready = false
+        hideLoadingCover()
         event("loadError", "message" to error.description.toString())
       }
     }
@@ -437,6 +454,7 @@ internal class NativePlayerView(
       rendererGone = true
       prepared = false
       ready = false
+      hideLoadingCover()
       event("rendererGone", "message" to "The Android WebView renderer exited")
       return true
     }
@@ -480,6 +498,27 @@ internal class NativePlayerView(
     currentHostActivity()?.window?.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
     event("fullscreen", "value" to false)
     return true
+  }
+
+  private fun openInYouTube(): Boolean {
+    val id = videoId ?: return false
+    val intent = Intent(
+      Intent.ACTION_VIEW,
+      Uri.parse("https://www.youtube.com/watch?v=$id"),
+    )
+    val activity = currentHostActivity()
+    return try {
+      if (activity != null) {
+        activity.startActivity(intent)
+      } else {
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        webView.context.startActivity(intent)
+      }
+      true
+    } catch (error: ActivityNotFoundException) {
+      Log.w(TAG, "Unable to open the current video in YouTube", error)
+      false
+    }
   }
 
   private fun isValidVideoId(value: String?): Boolean =

@@ -186,6 +186,28 @@ final class NativePlayerView: NSObject,
       if rate.isFinite && rate > 0 { evaluate("setPlaybackRate(\(rate))") }
     case "exitFullscreen":
       evaluate("exitFullscreen()")
+    case "openInYouTube":
+      guard let id = videoId,
+            let url = URL(string: "https://www.youtube.com/watch?v=\(id)") else {
+        result(FlutterError(
+          code: "open_failed",
+          message: "Unable to open this video in YouTube",
+          details: nil
+        ))
+        return
+      }
+      UIApplication.shared.open(url, options: [:]) { opened in
+        if opened {
+          result(nil)
+        } else {
+          result(FlutterError(
+            code: "open_failed",
+            message: "Unable to open this video in YouTube",
+            details: nil
+          ))
+        }
+      }
+      return
     default:
       result(FlutterMethodNotImplemented)
       return
@@ -221,6 +243,7 @@ final class NativePlayerView: NSObject,
     }
 
     guard let template = Self.playerTemplate() else {
+      hideLoadingCover()
       event("loadError", values: ["message": "Unable to read YTPlayer.html"])
       return
     }
@@ -247,6 +270,7 @@ final class NativePlayerView: NSObject,
     ]
     guard let embedUrl = components.url?.absoluteString else {
       prepared = false
+      hideLoadingCover()
       event("loadError", values: ["message": "Unable to create the YouTube embed URL"])
       return
     }
@@ -366,6 +390,7 @@ final class NativePlayerView: NSObject,
     case "FullscreenChange":
       event("fullscreen", values: ["value": data as? Bool ?? false])
     case "Error":
+      hideLoadingCover()
       event("youtubeError", values: ["code": (data as? NSNumber)?.intValue as Any])
     default:
       break
@@ -389,6 +414,7 @@ final class NativePlayerView: NSObject,
     prepared = false
     messageHandler.markNotReady()
     ready = false
+    hideLoadingCover()
     event("rendererGone", values: [
       "message": "The iOS WebKit content process exited",
     ])
@@ -420,6 +446,7 @@ final class NativePlayerView: NSObject,
     prepared = false
     messageHandler.markNotReady()
     ready = false
+    hideLoadingCover()
     event("loadError", values: ["message": nsError.localizedDescription])
   }
 
@@ -431,6 +458,10 @@ final class NativePlayerView: NSObject,
 
   private func showLoadingCover() {
     loadingCover.isHidden = false
+  }
+
+  private func hideLoadingCover() {
+    loadingCover.isHidden = true
   }
 
   func destroy() {

@@ -3,6 +3,9 @@
 * Suppress long-press gestures, native long-click callbacks, haptics, and
   context-menu events inside every embedded YouTube frame while preserving
   taps, multi-touch, and drag navigation.
+* Show a dedicated error with an external YouTube link when a video owner
+  disables embedding, and uncover native playback errors instead of leaving a
+  black loading surface visible.
 
 ## 0.1.1
 
