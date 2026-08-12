@@ -6,9 +6,10 @@ import 'package:flutter_youtube_player/flutter_youtube_player.dart';
 import 'episode.dart';
 
 class EpisodePlayerPage extends StatefulWidget {
-  const EpisodePlayerPage({required this.episode, super.key});
+  const EpisodePlayerPage({required this.episode, this.nextEpisode, super.key});
 
   final Episode episode;
+  final Episode? nextEpisode;
 
   @override
   State<EpisodePlayerPage> createState() => _EpisodePlayerPageState();
@@ -57,6 +58,18 @@ class _EpisodePlayerPageState extends State<EpisodePlayerPage> {
     } finally {
       if (mounted) setState(() => _isLoadingVideo = false);
     }
+  }
+
+  void _openNextEpisode() {
+    final nextEpisode = widget.nextEpisode;
+    if (nextEpisode == null) return;
+    unawaited(
+      Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          builder: (_) => EpisodePlayerPage(episode: nextEpisode),
+        ),
+      ),
+    );
   }
 
   @override
@@ -127,6 +140,21 @@ class _EpisodePlayerPageState extends State<EpisodePlayerPage> {
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
+                    ),
+                  ],
+                  if (widget.nextEpisode case final nextEpisode?) ...[
+                    const SizedBox(height: 20),
+                    ListTile(
+                      key: const ValueKey('open-next-episode'),
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('播放下一集'),
+                      subtitle: Text(
+                        nextEpisode.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: const Icon(Icons.skip_next),
+                      onTap: _openNextEpisode,
                     ),
                   ],
                 ],

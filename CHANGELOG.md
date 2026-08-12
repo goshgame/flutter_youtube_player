@@ -1,5 +1,8 @@
 ## Unreleased
 
+* Prewarm a covered player's existing native view while the covering route
+  exits, then restart playback only after the player route is fully visible to
+  avoid black or indefinitely loading frames between adjacent player pages.
 * Suppress long-press gestures, native long-click callbacks, haptics, and
   context-menu events inside every embedded YouTube frame while preserving
   taps, multi-touch, and drag navigation.

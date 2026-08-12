@@ -96,6 +96,61 @@ void main() {
 
     await tester.pumpWidget(const SizedBox.shrink());
   });
+
+  testWidgets('episode player can push the next episode player page', (
+    tester,
+  ) async {
+    const firstEpisode = Episode(
+      id: 1,
+      videoId: 'CoihJCn01Rk',
+      title: 'Morning News',
+      duration: '20:06',
+      podcast: 'NBC News',
+    );
+    const nextEpisode = Episode(
+      id: 2,
+      videoId: 'lOnDRI_G3tg',
+      title: 'Evening News',
+      duration: '18:42',
+      podcast: 'NBC News',
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(splashFactory: NoSplash.splashFactory),
+        home: const EpisodePlayerPage(
+          episode: firstEpisode,
+          nextEpisode: nextEpisode,
+        ),
+      ),
+    );
+    await tester.drag(find.byType(ListView), const Offset(0, -400));
+    await tester.pump();
+
+    expect(find.text('播放下一集'), findsOneWidget);
+    expect(find.text('Evening News'), findsOneWidget);
+
+    tester
+        .widget<ListTile>(
+          find.byKey(const ValueKey('open-next-episode')),
+        )
+        .onTap!();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(
+      find.byType(EpisodePlayerPage, skipOffstage: false),
+      findsNWidgets(2),
+    );
+    expect(find.text('Evening News'), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('Morning News'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 }
 
 class _RecordingNavigatorObserver extends NavigatorObserver {

@@ -100,11 +100,16 @@ class _NewsListPageState extends State<NewsListPage> {
     }
   }
 
-  void _openEpisode(Episode episode) {
+  void _openEpisode(int index) {
+    final episode = _episodes[index];
+    final nextEpisode = index + 1 < _episodes.length
+        ? _episodes[index + 1]
+        : null;
     unawaited(
       Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (_) => EpisodePlayerPage(episode: episode),
+          builder: (_) =>
+              EpisodePlayerPage(episode: episode, nextEpisode: nextEpisode),
         ),
       ),
     );
@@ -169,7 +174,7 @@ class _NewsListPageState extends State<NewsListPage> {
           final episode = _episodes[index];
           return _EpisodeTile(
             episode: episode,
-            onTap: () => _openEpisode(episode),
+            onTap: () => _openEpisode(index),
           );
         },
       ),
