@@ -43,12 +43,15 @@ internal class NativePlayerView(
     private const val ASSET = "flutter_youtube_player/YTPlayer.html"
     private const val ORIGIN = "http://example.com"
     private const val TAG = "FlutterYoutubePlayer"
+    private const val RESUME_PLAY_RETRY_INTERVAL_MS = 400L
+    private const val MAXIMUM_RESUME_PLAY_ATTEMPTS = 8
     private val videoIdPattern = Pattern.compile("[A-Za-z0-9_-]{11}")
     @Volatile private var cachedTemplate: String? = null
   }
 
   val rootView = FrameLayout(context).apply { setBackgroundColor(Color.BLACK) }
   private val longPressSuppressor = LongPressSuppressor(context)
+  private val playbackHandler = Handler(Looper.getMainLooper())
   private val webView = createWebView(context)
   private val loadingCover = View(context).apply { setBackgroundColor(Color.BLACK) }
   private var channel: MethodChannel? = null
@@ -62,11 +65,26 @@ internal class NativePlayerView(
   private var destroyed = false
   private var rendererGone = false
   private var suspended = false
-  private var resumeAfterLifecycle = false
+  private var prewarming = false
   private var shellVideoId: String? = null
   private var duration = 0.0
   private var customView: View? = null
   private var customViewCallback: WebChromeClient.CustomViewCallback? = null
+  private var resumePlayAttempt = 0
+  private val resumePlayRetry = object : Runnable {
+    override fun run() {
+      if (
+        destroyed || rendererGone || channel == null || suspended ||
+        !wantsToPlay || resumePlayAttempt >= MAXIMUM_RESUME_PLAY_ATTEMPTS
+      ) {
+        cancelResumePlayRetry()
+        return
+      }
+      resumePlayAttempt++
+      evaluate("requestPlay()")
+      playbackHandler.postDelayed(this, RESUME_PLAY_RETRY_INTERVAL_MS)
+    }
+  }
 
   val isInvalidated: Boolean get() = destroyed || rendererGone
 
@@ -89,7 +107,8 @@ internal class NativePlayerView(
     wantsMuted = false
     startSeconds = 0.0
     suspended = false
-    resumeAfterLifecycle = false
+    prewarming = false
+    cancelResumePlayRetry()
     webView.visibility = View.VISIBLE
     webView.onResume()
   }
@@ -97,12 +116,13 @@ internal class NativePlayerView(
   fun unbind() {
     if (channel == null) return
     wantsToPlay = false
+    cancelResumePlayRetry()
     evaluate("requestPause()")
     hideCustomView()
     channel?.setMethodCallHandler(null)
     channel = null
     hostActivity.clear()
-    resumeAfterLifecycle = false
+    prewarming = false
   }
 
   override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
@@ -140,6 +160,7 @@ internal class NativePlayerView(
       }
       "pause" -> {
         wantsToPlay = false
+        cancelResumePlayRetry()
         evaluate("requestPause()")
       }
       "reload" -> {
@@ -154,20 +175,32 @@ internal class NativePlayerView(
         if (seconds.isFinite()) evaluate("seekTo(${seconds.coerceAtLeast(0.0)},true)")
       }
       "suspend" -> {
-        if (!suspended) resumeAfterLifecycle = wantsToPlay
         suspended = true
+        prewarming = false
+        cancelResumePlayRetry()
         evaluate("requestPause()")
         webView.onPause()
         showLoadingCover()
         webView.visibility = View.INVISIBLE
       }
-      "resume" -> {
-        suspended = false
+      "prewarm" -> {
+        prewarming = true
         webView.visibility = View.VISIBLE
         webView.onResume()
-        if (resumeAfterLifecycle && wantsToPlay) evaluate("requestPlay()")
-        else if (ready) loadingCover.visibility = View.GONE
-        resumeAfterLifecycle = false
+        // suspend() 中的 JavaScript 可能直到 WebView 恢复后才执行；这里再次暂停，
+        // 确保它排在后续 resume 播放请求之前，避免迟到的 pause 覆盖 play。
+        evaluate("requestPause()")
+        if (ready) loadingCover.visibility = View.GONE
+      }
+      "resume" -> {
+        val shouldPlay = call.argument<Boolean>("play") ?: wantsToPlay
+        wantsToPlay = shouldPlay
+        suspended = false
+        prewarming = false
+        webView.visibility = View.VISIBLE
+        webView.onResume()
+        if (ready) loadingCover.visibility = View.GONE
+        if (shouldPlay) startResumePlayRetry() else cancelResumePlayRetry()
       }
       "mute" -> {
         wantsMuted = true
@@ -207,6 +240,7 @@ internal class NativePlayerView(
     forceReload: Boolean,
   ) {
     if (destroyed || rendererGone) return
+    cancelResumePlayRetry()
     val changed = id != videoId
     videoId = id
     wantsToPlay = autoplay
@@ -333,18 +367,22 @@ internal class NativePlayerView(
       when (payload.optString("event")) {
         "Ready" -> {
           ready = true
+          if (prewarming) hideLoadingCover()
           if (videoId != shellVideoId) {
             videoId?.let { switchVideo(it, wantsToPlay, startSeconds) }
           } else if (wantsToPlay && !suspended) {
             event("ready")
-            evaluate("requestPlay()")
+            startResumePlayRetry()
           } else {
             event("ready")
           }
         }
         "StateChange" -> {
           val state = payload.optInt("data", -999)
-          if (state == 1 && !suspended) loadingCover.visibility = View.GONE
+          if (state == 1) {
+            cancelResumePlayRetry()
+            if (!suspended || prewarming) hideLoadingCover()
+          }
           event("state", "value" to state)
         }
         "VideoData" -> {
@@ -366,7 +404,10 @@ internal class NativePlayerView(
             "loadedFraction" to data.optDouble("loadedFraction", 0.0),
           )
         }
-        "AutoplayBlocked" -> event("autoplayBlocked")
+        "AutoplayBlocked" -> {
+          cancelResumePlayRetry()
+          event("autoplayBlocked")
+        }
         "PlaybackQualityChange" -> event("playbackQuality", "value" to payload.optString("data"))
         "PlaybackRateChange" -> event("playbackRate", "value" to payload.optDouble("data", 1.0))
         "AudioState" -> {
@@ -379,6 +420,7 @@ internal class NativePlayerView(
         }
         "FullscreenChange" -> event("fullscreen", "value" to payload.optBoolean("data", false))
         "Error" -> {
+          cancelResumePlayRetry()
           hideLoadingCover()
           event("youtubeError", "code" to payload.optInt("data"))
         }
@@ -403,8 +445,19 @@ internal class NativePlayerView(
     loadingCover.visibility = View.GONE
   }
 
+  private fun startResumePlayRetry() {
+    cancelResumePlayRetry()
+    playbackHandler.post(resumePlayRetry)
+  }
+
+  private fun cancelResumePlayRetry() {
+    playbackHandler.removeCallbacks(resumePlayRetry)
+    resumePlayAttempt = 0
+  }
+
   fun destroy() {
     if (destroyed) return
+    cancelResumePlayRetry()
     evaluate("requestPause()")
     destroyed = true
     hideCustomView()
@@ -443,6 +496,7 @@ internal class NativePlayerView(
       error: WebResourceError,
     ) {
       if (request.isForMainFrame) {
+        cancelResumePlayRetry()
         prepared = false
         ready = false
         hideLoadingCover()
@@ -451,6 +505,7 @@ internal class NativePlayerView(
     }
 
     override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
+      cancelResumePlayRetry()
       rendererGone = true
       prepared = false
       ready = false

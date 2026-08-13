@@ -131,18 +131,19 @@ void main() {
     expect(find.text('Evening News'), findsOneWidget);
 
     tester
-        .widget<ListTile>(
-          find.byKey(const ValueKey('open-next-episode')),
-        )
+        .widget<ListTile>(find.byKey(const ValueKey('open-next-episode')))
         .onTap!();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
+    final playerPages = find.byType(EpisodePlayerPage, skipOffstage: false);
+    expect(playerPages, findsNWidgets(2));
     expect(
-      find.byType(EpisodePlayerPage, skipOffstage: false),
-      findsNWidgets(2),
+      tester
+          .widgetList<EpisodePlayerPage>(playerPages)
+          .map((page) => page.episode),
+      contains(nextEpisode),
     );
-    expect(find.text('Evening News'), findsOneWidget);
 
     await tester.pageBack();
     await tester.pump();

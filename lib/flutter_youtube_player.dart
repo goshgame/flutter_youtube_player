@@ -320,7 +320,9 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
   }
 
   Future<void> suspend() => _invoke('suspend');
-  Future<void> resume() => _invoke('resume');
+  Future<void> _prewarm() => _invoke('prewarm');
+  Future<void> resume() =>
+      _invoke('resume', <String, Object>{'play': _wantsToPlay});
   Future<void> exitFullscreen() => _invoke('exitFullscreen');
 
   /// 使用系统支持的 YouTube 应用或浏览器打开当前视频。
@@ -558,6 +560,8 @@ class FlutterYouTubePlayer extends StatefulWidget {
   State<FlutterYouTubePlayer> createState() => _FlutterYouTubePlayerState();
 }
 
+enum _NativePlayerMode { active, prewarmed, suspended }
+
 class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
     with WidgetsBindingObserver {
   // 延迟显示进度指示器，避免加载很快时出现短暂闪烁。
@@ -570,6 +574,7 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
   Timer? _playPauseButtonTimer;
   Animation<double>? _routeAnimation;
   Animation<double>? _secondaryRouteAnimation;
+  NavigatorState? _navigator;
   late String _videoId;
   YouTubePlayerState? _playPauseButtonState;
   bool _isInitialOverlayVisible = false;
@@ -579,7 +584,9 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
   bool _isAppSuspended = false;
   bool _isRouteExiting = false;
   bool _isRouteCovered = false;
-  bool _isNativeSuspended = false;
+  bool _isCoverRoutePopping = false;
+  bool _isNavigationGestureInProgress = false;
+  _NativePlayerMode _nativePlayerMode = _NativePlayerMode.active;
 
   @override
   void initState() {
@@ -594,14 +601,26 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
     WidgetsBinding.instance.addObserver(this);
     _syncLoadingIndicatorVisibility();
     _syncPlayPauseButtonVisibility(notify: false);
-    _syncNativeSuspension();
+    _syncNativePlayerMode();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final animation = ModalRoute.of(context)?.animation;
-    final secondaryAnimation = ModalRoute.of(context)?.secondaryAnimation;
+    final navigator = Navigator.maybeOf(context);
+    if (!identical(navigator, _navigator)) {
+      _navigator?.userGestureInProgressNotifier.removeListener(
+        _handleNavigationGestureChange,
+      );
+      _navigator = navigator;
+      navigator?.userGestureInProgressNotifier.addListener(
+        _handleNavigationGestureChange,
+      );
+      _handleNavigationGestureChange();
+    }
+    final route = ModalRoute.of(context);
+    final animation = route?.animation;
+    final secondaryAnimation = route?.secondaryAnimation;
     if (!identical(animation, _routeAnimation)) {
       _routeAnimation?.removeStatusListener(_handleRouteAnimationStatus);
       _routeAnimation = animation;
@@ -612,10 +631,14 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
       _secondaryRouteAnimation?.removeStatusListener(
         _handleSecondaryRouteAnimationStatus,
       );
+      _secondaryRouteAnimation?.removeListener(
+        _handleSecondaryRouteAnimationValue,
+      );
       _secondaryRouteAnimation = secondaryAnimation;
       secondaryAnimation?.addStatusListener(
         _handleSecondaryRouteAnimationStatus,
       );
+      secondaryAnimation?.addListener(_handleSecondaryRouteAnimationValue);
       if (secondaryAnimation != null) {
         _handleSecondaryRouteAnimationStatus(secondaryAnimation.status);
       }
@@ -642,8 +665,8 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
     widget.controller.addListener(_handleControllerChange);
     _syncLoadingIndicatorVisibility();
     _syncPlayPauseButtonVisibility(notify: false);
-    _isNativeSuspended = false;
-    _syncNativeSuspension();
+    _nativePlayerMode = _NativePlayerMode.active;
+    _syncNativePlayerMode();
   }
 
   void _handleControllerChange() {
@@ -741,7 +764,7 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _isAppSuspended = state != AppLifecycleState.resumed;
-    _syncNativeSuspension();
+    _syncNativePlayerMode();
   }
 
   void _handleRouteAnimationStatus(AnimationStatus status) {
@@ -749,24 +772,61 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
     final isExiting = status == AnimationStatus.reverse;
     if (_isRouteExiting == isExiting) return;
     _isRouteExiting = isExiting;
-    _syncNativeSuspension();
+    _syncNativePlayerMode();
   }
 
   void _handleSecondaryRouteAnimationStatus(AnimationStatus status) {
     final isCovered = status != AnimationStatus.dismissed;
-    if (_isRouteCovered == isCovered) return;
+    final isCoverRoutePopping = status == AnimationStatus.reverse;
+    if (_isRouteCovered == isCovered &&
+        _isCoverRoutePopping == isCoverRoutePopping) {
+      return;
+    }
     _isRouteCovered = isCovered;
-    _syncNativeSuspension();
+    _isCoverRoutePopping = isCoverRoutePopping;
+    _syncNativePlayerMode();
   }
 
-  void _syncNativeSuspension() {
-    final shouldSuspend = _isAppSuspended || _isRouteExiting || _isRouteCovered;
-    if (_isNativeSuspended == shouldSuspend) return;
-    _isNativeSuspended = shouldSuspend;
-    if (shouldSuspend) {
-      unawaited(widget.controller.suspend());
-    } else {
-      unawaited(widget.controller.resume());
+  void _handleSecondaryRouteAnimationValue() {
+    if (!_isNavigationGestureInProgress || !_isRouteCovered) return;
+    _syncNativePlayerMode();
+  }
+
+  void _handleNavigationGestureChange() {
+    final isInProgress =
+        _navigator?.userGestureInProgressNotifier.value ?? false;
+    if (_isNavigationGestureInProgress == isInProgress) return;
+    _isNavigationGestureInProgress = isInProgress;
+    _syncNativePlayerMode();
+  }
+
+  void _syncNativePlayerMode() {
+    final isInteractiveRouteExiting =
+        _isNavigationGestureInProgress && !_isRouteCovered;
+    final isInteractiveCoverRouteRevealing =
+        _isNavigationGestureInProgress &&
+        _isRouteCovered &&
+        (_secondaryRouteAnimation?.value ?? 1) < 1;
+    final isCoverRouteRevealing =
+        _isCoverRoutePopping || isInteractiveCoverRouteRevealing;
+    final desiredMode =
+        _isAppSuspended || _isRouteExiting || isInteractiveRouteExiting
+        ? _NativePlayerMode.suspended
+        : _isRouteCovered
+        ? isCoverRouteRevealing
+              ? _NativePlayerMode.prewarmed
+              : _NativePlayerMode.suspended
+        : _NativePlayerMode.active;
+    if (_nativePlayerMode == desiredMode) return;
+    _nativePlayerMode = desiredMode;
+
+    switch (desiredMode) {
+      case _NativePlayerMode.active:
+        unawaited(widget.controller.resume());
+      case _NativePlayerMode.prewarmed:
+        unawaited(widget.controller._prewarm());
+      case _NativePlayerMode.suspended:
+        unawaited(widget.controller.suspend());
     }
   }
 
@@ -777,6 +837,12 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
     _routeAnimation?.removeStatusListener(_handleRouteAnimationStatus);
     _secondaryRouteAnimation?.removeStatusListener(
       _handleSecondaryRouteAnimationStatus,
+    );
+    _secondaryRouteAnimation?.removeListener(
+      _handleSecondaryRouteAnimationValue,
+    );
+    _navigator?.userGestureInProgressNotifier.removeListener(
+      _handleNavigationGestureChange,
     );
     WidgetsBinding.instance.removeObserver(this);
     widget.controller.removeListener(_handleControllerChange);

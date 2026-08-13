@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -400,7 +401,7 @@ void main() {
   });
 
   testWidgets(
-    'suspends while covered and resumes after the route is revealed',
+    'prewarms while the covering route exits and then resumes playback',
     (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.android;
       final controller = FlutterYouTubePlayerController(
@@ -409,10 +410,12 @@ void main() {
       );
       const channel = MethodChannel('flutter_youtube_player/player_101');
       final calls = <String>[];
+      final methodCalls = <MethodCall>[];
       final messenger =
           TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
       messenger.setMockMethodCallHandler(channel, (call) async {
         calls.add(call.method);
+        methodCalls.add(call);
         return null;
       });
 
@@ -451,19 +454,152 @@ void main() {
 
       await tester.tap(find.text('push cover'));
       await tester.pump();
-      expect(calls, contains('suspend'));
+      expect(calls.last, 'suspend');
 
       await tester.pump(const Duration(milliseconds: 500));
       Navigator.of(tester.element(find.text('cover'))).pop();
       await tester.pump();
+      expect(calls.last, 'prewarm');
+
       await tester.pump(const Duration(milliseconds: 500));
-      expect(calls, contains('resume'));
+      expect(calls.last, 'resume');
+      expect(methodCalls.last.arguments, <String, Object>{'play': true});
 
       messenger.setMockMethodCallHandler(channel, null);
       controller.dispose();
       debugDefaultTargetPlatformOverride = null;
     },
   );
+
+  testWidgets('does not autoplay a manually paused player after route return', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    final controller = FlutterYouTubePlayerController(
+      initialVideoId: 'r9UYbCxus3s',
+      autoPlay: true,
+    );
+    const channel = MethodChannel('flutter_youtube_player/player_103');
+    final methodCalls = <MethodCall>[];
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      methodCalls.add(call);
+      return null;
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => Column(
+              children: [
+                SizedBox(
+                  width: 400,
+                  height: 225,
+                  child: FlutterYouTubePlayer(controller: controller),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).push<void>(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const Scaffold(body: Text('cover')),
+                    ),
+                  ),
+                  child: const Text('push cover'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    tester.widget<AndroidView>(find.byType(AndroidView)).onPlatformViewCreated!(
+      103,
+    );
+    await controller.pause();
+
+    await tester.tap(find.text('push cover'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    Navigator.of(tester.element(find.text('cover'))).pop();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    final resumeCall = methodCalls.lastWhere((call) => call.method == 'resume');
+    expect(resumeCall.arguments, <String, Object>{'play': false});
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    messenger.setMockMethodCallHandler(channel, null);
+    controller.dispose();
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('suspends again when an interactive route pop is cancelled', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    final controller = FlutterYouTubePlayerController(
+      initialVideoId: 'r9UYbCxus3s',
+      autoPlay: true,
+    );
+    const channel = MethodChannel('flutter_youtube_player/player_102');
+    final calls = <String>[];
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      calls.add(call.method);
+      return null;
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(platform: TargetPlatform.iOS),
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => Column(
+              children: [
+                SizedBox(
+                  width: 400,
+                  height: 225,
+                  child: FlutterYouTubePlayer(controller: controller),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).push<void>(
+                    CupertinoPageRoute<void>(
+                      builder: (_) => const Scaffold(body: Text('cover')),
+                    ),
+                  ),
+                  child: const Text('push cover'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    tester.widget<AndroidView>(find.byType(AndroidView)).onPlatformViewCreated!(
+      102,
+    );
+
+    await tester.tap(find.text('push cover'));
+    await tester.pumpAndSettle();
+    expect(calls.last, 'suspend');
+
+    final gesture = await tester.startGesture(const Offset(1, 300));
+    await gesture.moveBy(const Offset(40, 0));
+    await tester.pump();
+    expect(calls.last, 'prewarm');
+
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(find.text('cover'), findsOneWidget);
+    expect(calls.last, 'suspend');
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    messenger.setMockMethodCallHandler(channel, null);
+    controller.dispose();
+    debugDefaultTargetPlatformOverride = null;
+  });
 
   for (final platform in <TargetPlatform>[
     TargetPlatform.android,

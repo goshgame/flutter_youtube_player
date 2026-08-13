@@ -6,6 +6,8 @@ final class NativePlayerView: NSObject,
   WKScriptMessageHandler, WKNavigationDelegate, WKUIDelegate {
   private static let origin = "http://example.com"
   private static let processPool = WKProcessPool()
+  private static let resumePlayRetryInterval = 0.4
+  private static let maximumResumePlayAttempts = 8
   private static let videoIdPattern = try! NSRegularExpression(
     pattern: "^[A-Za-z0-9_-]{11}$"
   )
@@ -23,12 +25,15 @@ final class NativePlayerView: NSObject,
   private var startSeconds = 0.0
   private var prepared = false
   private var shellVideoId: String?
-  private var resumeAfterLifecycle = false
   private var ready = false
   private var invalidated = false
   private var destroyed = false
   private var suspended = false
+  private var prewarming = false
   private var duration = 0.0
+  private var resumePlayAttempt = 0
+  private var resumePlayRetryGeneration = 0
+  private var resumePlayRetryWorkItem: DispatchWorkItem?
 
   var isInvalidated: Bool { invalidated }
 
@@ -84,7 +89,8 @@ final class NativePlayerView: NSObject,
     wantsMuted = false
     startSeconds = 0
     suspended = false
-    resumeAfterLifecycle = false
+    prewarming = false
+    cancelResumePlayRetry()
     webView.isHidden = false
     channel = FlutterMethodChannel(
       name: "flutter_youtube_player/player_\(viewId)",
@@ -98,10 +104,11 @@ final class NativePlayerView: NSObject,
   func unbind() {
     guard channel != nil else { return }
     wantsToPlay = false
+    cancelResumePlayRetry()
     evaluate("requestPause()")
     channel?.setMethodCallHandler(nil)
     channel = nil
-    resumeAfterLifecycle = false
+    prewarming = false
   }
 
   private func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -148,6 +155,7 @@ final class NativePlayerView: NSObject,
       evaluate("requestPlay()")
     case "pause":
       wantsToPlay = false
+      cancelResumePlayRetry()
       evaluate("requestPause()")
     case "reload":
       wantsToPlay = true
@@ -161,17 +169,28 @@ final class NativePlayerView: NSObject,
       let seconds = (arguments?["seconds"] as? NSNumber)?.doubleValue ?? 0
       if seconds.isFinite { evaluate("seekTo(\(max(seconds, 0)),true)") }
     case "suspend":
-      if !suspended { resumeAfterLifecycle = wantsToPlay }
       suspended = true
+      prewarming = false
+      cancelResumePlayRetry()
       evaluate("requestPause()")
       showLoadingCover()
       webView.isHidden = true
-    case "resume":
-      suspended = false
+    case "prewarm":
+      prewarming = true
       webView.isHidden = false
-      if resumeAfterLifecycle && wantsToPlay { evaluate("requestPlay()") }
-      else if ready { loadingCover.isHidden = true }
-      resumeAfterLifecycle = false
+      // suspend 发出的 JavaScript 可能在 WKWebView 再次可运行后才落地；
+      // 预热时重新暂停，保证迟到的 pause 不会覆盖随后的 resume 播放请求。
+      evaluate("requestPause()")
+      if ready { loadingCover.isHidden = true }
+    case "resume":
+      let shouldPlay = arguments?["play"] as? Bool ?? wantsToPlay
+      wantsToPlay = shouldPlay
+      suspended = false
+      prewarming = false
+      webView.isHidden = false
+      if ready { loadingCover.isHidden = true }
+      if shouldPlay { startResumePlayRetry() }
+      else { cancelResumePlayRetry() }
     case "mute":
       wantsMuted = true
       evaluate("mute()")
@@ -222,6 +241,7 @@ final class NativePlayerView: NSObject,
     forceReload: Bool
   ) {
     guard !invalidated else { return }
+    cancelResumePlayRetry()
     let changed = id != videoId
     videoId = id
     wantsToPlay = autoplay
@@ -346,17 +366,21 @@ final class NativePlayerView: NSObject,
     switch type {
     case "Ready":
       ready = true
+      if prewarming { hideLoadingCover() }
       if videoId != shellVideoId, let id = videoId {
         switchVideo(id, autoplay: wantsToPlay, startSeconds: startSeconds)
       } else if wantsToPlay && !suspended {
         event("ready")
-        evaluate("requestPlay()")
+        startResumePlayRetry()
       } else {
         event("ready")
       }
     case "StateChange":
       let state = (data as? NSNumber)?.intValue ?? -999
-      if state == 1 && !suspended { loadingCover.isHidden = true }
+      if state == 1 {
+        cancelResumePlayRetry()
+        if !suspended || prewarming { hideLoadingCover() }
+      }
       event("state", values: ["value": state])
     case "VideoData":
       let values = data as? [String: Any]
@@ -374,6 +398,7 @@ final class NativePlayerView: NSObject,
         "loadedFraction": max((values?["loadedFraction"] as? NSNumber)?.doubleValue ?? 0, 0),
       ])
     case "AutoplayBlocked":
+      cancelResumePlayRetry()
       event("autoplayBlocked")
     case "PlaybackQualityChange":
       event("playbackQuality", values: ["value": data as? String ?? ""])
@@ -390,6 +415,7 @@ final class NativePlayerView: NSObject,
     case "FullscreenChange":
       event("fullscreen", values: ["value": data as? Bool ?? false])
     case "Error":
+      cancelResumePlayRetry()
       hideLoadingCover()
       event("youtubeError", values: ["code": (data as? NSNumber)?.intValue as Any])
     default:
@@ -410,6 +436,7 @@ final class NativePlayerView: NSObject,
   }
 
   func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+    cancelResumePlayRetry()
     invalidated = true
     prepared = false
     messageHandler.markNotReady()
@@ -443,6 +470,7 @@ final class NativePlayerView: NSObject,
   private func markLoadFailed(_ error: Error) {
     let nsError = error as NSError
     guard nsError.code != NSURLErrorCancelled else { return }
+    cancelResumePlayRetry()
     prepared = false
     messageHandler.markNotReady()
     ready = false
@@ -464,8 +492,50 @@ final class NativePlayerView: NSObject,
     loadingCover.isHidden = true
   }
 
+  private func startResumePlayRetry() {
+    cancelResumePlayRetry()
+    let generation = resumePlayRetryGeneration
+    scheduleResumePlayAttempt(after: 0, generation: generation)
+  }
+
+  private func scheduleResumePlayAttempt(
+    after delay: TimeInterval,
+    generation: Int
+  ) {
+    let workItem = DispatchWorkItem { [weak self] in
+      guard let self else { return }
+      // 已取消的 DispatchWorkItem 仍可能被调度。旧代任务只能退出，不能取消
+      // 当前代刚创建的恢复链。
+      guard generation == self.resumePlayRetryGeneration else { return }
+      guard !self.invalidated,
+            self.channel != nil,
+            !self.suspended,
+            self.wantsToPlay,
+            self.resumePlayAttempt < Self.maximumResumePlayAttempts else {
+        self.cancelResumePlayRetry()
+        return
+      }
+      self.resumePlayAttempt += 1
+      self.evaluate("requestPlay()")
+      self.scheduleResumePlayAttempt(
+        after: Self.resumePlayRetryInterval,
+        generation: generation
+      )
+    }
+    resumePlayRetryWorkItem = workItem
+    DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: workItem)
+  }
+
+  private func cancelResumePlayRetry() {
+    resumePlayRetryGeneration += 1
+    resumePlayRetryWorkItem?.cancel()
+    resumePlayRetryWorkItem = nil
+    resumePlayAttempt = 0
+  }
+
   func destroy() {
     guard !destroyed else { return }
+    cancelResumePlayRetry()
     if !invalidated { evaluate("requestPause()") }
     destroyed = true
     invalidated = true
