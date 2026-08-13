@@ -31,6 +31,7 @@ final class NativePlayerView: NSObject,
   private var suspended = false
   private var prewarming = false
   private var duration = 0.0
+  private var playerState: Int?
   private var resumePlayAttempt = 0
   private var resumePlayRetryGeneration = 0
   private var resumePlayRetryWorkItem: DispatchWorkItem?
@@ -248,6 +249,7 @@ final class NativePlayerView: NSObject,
     startSeconds = requestedStartSeconds
     if changed || forceReload {
       duration = 0
+      playerState = nil
       showLoadingCover()
     }
 
@@ -377,9 +379,15 @@ final class NativePlayerView: NSObject,
       }
     case "StateChange":
       let state = (data as? NSNumber)?.intValue ?? -999
+      let exitedBufferingToUnstarted = playerState == 3 && state == -1
+      playerState = state
       if state == 1 {
         cancelResumePlayRetry()
         if !suspended || prewarming { hideLoadingCover() }
+      } else if exitedBufferingToUnstarted && (!suspended || prewarming) {
+        // Upcoming videos can return to UNSTARTED after buffering. Reveal the
+        // WebView's scheduled state without changing the WebView visibility.
+        hideLoadingCover()
       }
       event("state", values: ["value": state])
     case "VideoData":

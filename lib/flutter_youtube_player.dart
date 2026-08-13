@@ -576,11 +576,13 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
   Animation<double>? _secondaryRouteAnimation;
   NavigatorState? _navigator;
   late String _videoId;
+  late YouTubePlayerState _playerState;
   YouTubePlayerState? _playPauseButtonState;
   bool _isInitialOverlayVisible = false;
   bool _isLoadingIndicatorVisible = false;
   bool _isPlayPauseButtonVisible = false;
   bool _hasPlaybackStarted = false;
+  bool _hasExitedBufferingToUnstarted = false;
   bool _isAppSuspended = false;
   bool _isRouteExiting = false;
   bool _isRouteCovered = false;
@@ -672,22 +674,34 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
   void _handleControllerChange() {
     if (!mounted) return;
 
-    if (_viewGeneration != widget.controller._viewGeneration) {
+    final playerReinitialized =
+        _viewGeneration != widget.controller._viewGeneration;
+    if (playerReinitialized) {
       // 更换 Key 强制 Flutter 销毁旧平台视图，并向原生端申请新实例。
       setState(() {
         _viewGeneration = widget.controller._viewGeneration;
         _platformViewKey = UniqueKey();
       });
       _hasPlaybackStarted = false;
+      _hasExitedBufferingToUnstarted = false;
     }
 
     final value = widget.controller.value;
-    if (value.videoId != _videoId) {
+    final videoChanged = value.videoId != _videoId;
+    if (videoChanged) {
       setState(() {
         _videoId = value.videoId;
         _hasPlaybackStarted = false;
+        _hasExitedBufferingToUnstarted = false;
       });
     }
+    if (!playerReinitialized &&
+        !videoChanged &&
+        _playerState == YouTubePlayerState.buffering &&
+        value.state == YouTubePlayerState.unstarted) {
+      _hasExitedBufferingToUnstarted = true;
+    }
+    _playerState = value.state;
     if (value.state == YouTubePlayerState.playing) {
       _hasPlaybackStarted = true;
     }
@@ -698,13 +712,19 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
   void _resetPlaybackState() {
     final value = widget.controller.value;
     _videoId = value.videoId;
+    _playerState = value.state;
     _hasPlaybackStarted = value.state == YouTubePlayerState.playing;
+    _hasExitedBufferingToUnstarted = false;
     _isInitialOverlayVisible = _shouldShowInitialOverlay(value);
   }
 
   bool _shouldShowInitialOverlay(YouTubePlayerValue value) {
     // 出错或自动播放被拦截时移除遮罩，露出原生播放器自身的提示画面。
-    if (value.hasError || value.isAutoplayBlocked) return false;
+    if (value.hasError ||
+        value.isAutoplayBlocked ||
+        _hasExitedBufferingToUnstarted) {
+      return false;
+    }
     return !_hasPlaybackStarted;
   }
 

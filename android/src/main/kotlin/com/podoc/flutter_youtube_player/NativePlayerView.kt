@@ -68,6 +68,7 @@ internal class NativePlayerView(
   private var prewarming = false
   private var shellVideoId: String? = null
   private var duration = 0.0
+  private var playerState: Int? = null
   private var customView: View? = null
   private var customViewCallback: WebChromeClient.CustomViewCallback? = null
   private var resumePlayAttempt = 0
@@ -247,6 +248,7 @@ internal class NativePlayerView(
     startSeconds = requestedStartSeconds
     if (changed || forceReload) {
       duration = 0.0
+      playerState = null
       showLoadingCover()
     }
     if (prepared) {
@@ -379,9 +381,15 @@ internal class NativePlayerView(
         }
         "StateChange" -> {
           val state = payload.optInt("data", -999)
+          val exitedBufferingToUnstarted = playerState == 3 && state == -1
+          playerState = state
           if (state == 1) {
             cancelResumePlayRetry()
             if (!suspended || prewarming) hideLoadingCover()
+          } else if (exitedBufferingToUnstarted && (!suspended || prewarming)) {
+            // Upcoming videos can return to UNSTARTED after buffering. Reveal
+            // the WebView's scheduled state without changing its visibility.
+            hideLoadingCover()
           }
           event("state", "value" to state)
         }

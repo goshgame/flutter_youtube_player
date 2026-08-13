@@ -178,6 +178,20 @@ void main() {
     await tester.pump(const Duration(milliseconds: 120));
     expect(find.byKey(const ValueKey('player-loading')), findsOneWidget);
 
+    controller.value = controller.value.copyWith(
+      state: YouTubePlayerState.buffering,
+    );
+    await tester.pump();
+    expect(find.byKey(const ValueKey('player-cover')), findsOneWidget);
+    expect(find.byKey(const ValueKey('player-loading')), findsOneWidget);
+
+    controller.value = controller.value.copyWith(
+      state: YouTubePlayerState.unstarted,
+    );
+    await tester.pump();
+    expect(find.byKey(const ValueKey('player-cover')), findsNothing);
+    expect(find.byKey(const ValueKey('player-loading')), findsNothing);
+
     controller.value = controller.value.copyWith(isAutoplayBlocked: true);
     await tester.pump();
     expect(find.byKey(const ValueKey('player-cover')), findsNothing);
