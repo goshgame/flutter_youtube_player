@@ -103,6 +103,17 @@
       });
     }
 
+    function handleStateChange(event) {
+      stopProgress();
+      sendEvent('StateChange', event.data);
+      sendVideoTime();
+      if (event.data !== YT.PlayerState.PLAYING) return;
+
+      retryAudioPreferenceAfterPlaybackStarts();
+      sendVideoData();
+      timerId = setInterval(sendVideoTime, 250);
+    }
+
     function canCallPlayer(methodName) {
       return player && typeof player[methodName] === 'function';
     }
@@ -205,17 +216,19 @@
       ));
     }
 
+    function handleReady() {
+      closeCaptions();
+      applyAudioPreference();
+      sendEvent('Ready');
+      if (playRequested) player.playVideo(); else player.pauseVideo();
+      setTimeout(function () { sendVideoData(); sendVideoTime(); }, 0);
+    }
+
     function onYouTubeIframeAPIReady() {
       if (player) return;
       player = new YT.Player('player', {
         events: {
-          onReady: function () {
-            closeCaptions();
-            applyAudioPreference();
-            sendEvent('Ready');
-            if (playRequested) player.playVideo(); else player.pauseVideo();
-            setTimeout(function () { sendVideoData(); sendVideoTime(); }, 0);
-          },
+          onReady: handleReady,
           onAutoplayBlocked: function () { sendEvent('AutoplayBlocked'); },
           onApiChange: closeCaptions,
           onPlaybackQualityChange: function (event) {
@@ -224,16 +237,7 @@
           onPlaybackRateChange: function (event) {
             sendEvent('PlaybackRateChange', event.data);
           },
-          onStateChange: function (event) {
-            stopProgress();
-            sendEvent('StateChange', event.data);
-            sendVideoTime();
-            if (event.data === YT.PlayerState.PLAYING) {
-              retryAudioPreferenceAfterPlaybackStarts();
-              sendVideoData();
-              timerId = setInterval(sendVideoTime, 250);
-            }
-          },
+          onStateChange: handleStateChange,
           onError: function (event) { stopProgress(); sendEvent('Error', event.data); }
         }
       });

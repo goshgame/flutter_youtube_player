@@ -278,7 +278,8 @@ final class NativePlayerView: NSObject,
     components.host = "www.youtube.com"
     components.path = "/embed/\(id)"
     components.queryItems = [
-      URLQueryItem(name: "autoplay", value: autoplay ? "1" : "0"),
+      // 首次 iframe 先保持暂停，Ready 后由原生播放意图统一发起播放。
+      URLQueryItem(name: "autoplay", value: "0"),
       URLQueryItem(name: "start", value: String(startSeconds)),
       URLQueryItem(name: "enablejsapi", value: "1"),
       URLQueryItem(name: "origin", value: Self.origin),
@@ -300,7 +301,7 @@ final class NativePlayerView: NSObject,
       .replacingOccurrences(of: "{{EMBED_URL}}", with: Self.htmlEscape(embedUrl))
       .replacingOccurrences(of: "{{TITLE}}", with: "YouTube video player")
       .replacingOccurrences(of: "{{VIDEO_ID}}", with: id)
-      .replacingOccurrences(of: "{{AUTOPLAY}}", with: autoplay ? "true" : "false")
+      .replacingOccurrences(of: "{{AUTOPLAY}}", with: "false")
       .replacingOccurrences(of: "{{START_SECONDS}}", with: String(startSeconds))
       .replacingOccurrences(of: "{{MUTED}}", with: wantsMuted ? "true" : "false")
     webView.loadHTMLString(html, baseURL: URL(string: "\(Self.origin)/"))
@@ -389,7 +390,10 @@ final class NativePlayerView: NSObject,
         // WebView's scheduled state without changing the WebView visibility.
         hideLoadingCover()
       }
-      event("state", values: ["value": state])
+      event("state", values: [
+        "value": state,
+        "hideInitialOverlay": exitedBufferingToUnstarted,
+      ])
     case "VideoData":
       let values = data as? [String: Any]
       duration = max((values?["duration"] as? NSNumber)?.doubleValue ?? 0, 0)

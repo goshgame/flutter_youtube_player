@@ -271,7 +271,8 @@ internal class NativePlayerView(
       .authority("www.youtube.com")
       .appendPath("embed")
       .appendPath(id)
-      .appendQueryParameter("autoplay", if (autoplay) "1" else "0")
+      // 首次 iframe 先保持暂停，Ready 后由原生播放意图统一发起播放。
+      .appendQueryParameter("autoplay", "0")
       .appendQueryParameter("start", startSeconds.toString())
       .appendQueryParameter("enablejsapi", "1")
       .appendQueryParameter("origin", ORIGIN)
@@ -288,7 +289,7 @@ internal class NativePlayerView(
       .replace("{{EMBED_URL}}", htmlEscape(embedUrl))
       .replace("{{TITLE}}", "YouTube video player")
       .replace("{{VIDEO_ID}}", id)
-      .replace("{{AUTOPLAY}}", autoplay.toString())
+      .replace("{{AUTOPLAY}}", "false")
       .replace("{{START_SECONDS}}", startSeconds.toString())
       .replace("{{MUTED}}", wantsMuted.toString())
     webView.loadDataWithBaseURL("$ORIGIN/", html, "text/html", "UTF-8", null)
@@ -391,7 +392,11 @@ internal class NativePlayerView(
             // the WebView's scheduled state without changing its visibility.
             hideLoadingCover()
           }
-          event("state", "value" to state)
+          event(
+            "state",
+            "value" to state,
+            "hideInitialOverlay" to exitedBufferingToUnstarted,
+          )
         }
         "VideoData" -> {
           val data = payload.optJSONObject("data") ?: return

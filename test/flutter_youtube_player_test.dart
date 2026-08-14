@@ -191,12 +191,76 @@ void main() {
     await tester.pump();
     expect(find.byKey(const ValueKey('player-cover')), findsNothing);
     expect(find.byKey(const ValueKey('player-loading')), findsNothing);
+    await tester.pump(const Duration(milliseconds: 120));
+    expect(find.byKey(const ValueKey('player-cover')), findsNothing);
+    expect(find.byKey(const ValueKey('player-loading')), findsNothing);
 
     controller.value = controller.value.copyWith(isAutoplayBlocked: true);
     await tester.pump();
     expect(find.byKey(const ValueKey('player-cover')), findsNothing);
     expect(find.byKey(const ValueKey('player-loading')), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());
+    controller.dispose();
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('hides custom overlays from the native buffering exit marker', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    final controller = FlutterYouTubePlayerController(
+      initialVideoId: 'r9UYbCxus3s',
+      autoPlay: true,
+    );
+    const channel = MethodChannel('flutter_youtube_player/player_87');
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(channel, (call) async => null);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SizedBox(
+          width: 400,
+          height: 225,
+          child: FlutterYouTubePlayer(controller: controller),
+        ),
+      ),
+    );
+    tester.widget<AndroidView>(find.byType(AndroidView)).onPlatformViewCreated!(
+      87,
+    );
+    await tester.pump(const Duration(milliseconds: 120));
+    expect(find.byKey(const ValueKey('player-cover')), findsOneWidget);
+    expect(find.byKey(const ValueKey('player-loading')), findsOneWidget);
+
+    await messenger.handlePlatformMessage(
+      channel.name,
+      const StandardMethodCodec().encodeMethodCall(
+        const MethodCall('event', <String, Object>{
+          'type': 'state',
+          'value': 3,
+          'hideInitialOverlay': false,
+        }),
+      ),
+      (_) {},
+    );
+    await messenger.handlePlatformMessage(
+      channel.name,
+      const StandardMethodCodec().encodeMethodCall(
+        const MethodCall('event', <String, Object>{
+          'type': 'state',
+          'value': -1,
+          'hideInitialOverlay': true,
+        }),
+      ),
+      (_) {},
+    );
+    await tester.pump();
+    expect(find.byKey(const ValueKey('player-cover')), findsNothing);
+    expect(find.byKey(const ValueKey('player-loading')), findsNothing);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    messenger.setMockMethodCallHandler(channel, null);
     controller.dispose();
     debugDefaultTargetPlatformOverride = null;
   });

@@ -188,6 +188,8 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
 
   // 递增该值会通知 Widget 丢弃旧平台视图并创建一个新实例。
   int _viewGeneration = 0;
+  // 原生播放器检测到 3 -> -1 时，要求 Flutter 立即移除自定义遮罩。
+  bool _nativeInitialOverlayDismissed = false;
   bool _disposed = false;
 
   static final RegExp _videoIdPattern = RegExp(r'^[A-Za-z0-9_-]{11}$');
@@ -283,6 +285,7 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
     }
     _validatePosition(initialPosition, 'initialPosition');
     _wantsToPlay = autoplay;
+    _nativeInitialOverlayDismissed = false;
     value = value.copyWith(
       videoId: videoId,
       isReady: false,
@@ -370,6 +373,7 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
     _channel?.setMethodCallHandler(null);
     _channel = null;
     _isChannelActivating = false;
+    _nativeInitialOverlayDismissed = false;
     _viewGeneration++;
     value = value.copyWith(
       isReady: false,
@@ -416,6 +420,9 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
         );
       case 'state':
         final code = (event['value'] as num?)?.toInt() ?? -999;
+        if (event['hideInitialOverlay'] == true) {
+          _nativeInitialOverlayDismissed = true;
+        }
         value = value.copyWith(
           state: YouTubePlayerState.fromCode(code),
           isAutoplayBlocked: code == 1 ? false : null,
@@ -476,6 +483,7 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
         _channel?.setMethodCallHandler(null);
         _channel = null;
         _viewGeneration++;
+        _nativeInitialOverlayDismissed = false;
         value = value.copyWith(
           isReady: false,
           errorMessage:
@@ -722,7 +730,8 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
     // 出错或自动播放被拦截时移除遮罩，露出原生播放器自身的提示画面。
     if (value.hasError ||
         value.isAutoplayBlocked ||
-        _hasExitedBufferingToUnstarted) {
+        _hasExitedBufferingToUnstarted ||
+        widget.controller._nativeInitialOverlayDismissed) {
       return false;
     }
     return !_hasPlaybackStarted;
@@ -731,14 +740,7 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
   void _syncLoadingIndicatorVisibility() {
     final isLoading = _shouldShowInitialOverlay(widget.controller.value);
     if (!isLoading) {
-      _loadingIndicatorTimer?.cancel();
-      _loadingIndicatorTimer = null;
-      if ((_isInitialOverlayVisible || _isLoadingIndicatorVisible) && mounted) {
-        setState(() {
-          _isInitialOverlayVisible = false;
-          _isLoadingIndicatorVisible = false;
-        });
-      }
+      _hideCustomLoadingAndCover();
       return;
     }
     if (!_isInitialOverlayVisible && mounted) {
@@ -752,6 +754,19 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
       if (_shouldShowInitialOverlay(widget.controller.value)) {
         setState(() => _isLoadingIndicatorVisible = true);
       }
+    });
+  }
+
+  void _hideCustomLoadingAndCover() {
+    _loadingIndicatorTimer?.cancel();
+    _loadingIndicatorTimer = null;
+    if (!mounted ||
+        (!_isInitialOverlayVisible && !_isLoadingIndicatorVisible)) {
+      return;
+    }
+    setState(() {
+      _isInitialOverlayVisible = false;
+      _isLoadingIndicatorVisible = false;
     });
   }
 
