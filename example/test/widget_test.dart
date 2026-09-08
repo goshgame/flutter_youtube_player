@@ -7,6 +7,8 @@ import 'package:flutter_youtube_player_example/episode_repository.dart';
 import 'package:flutter_youtube_player_example/main.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   test('example video ID is valid', () {
     expect(
       FlutterYouTubePlayerController.isValidVideoId('r9UYbCxus3s'),
@@ -14,11 +16,14 @@ void main() {
     );
   });
 
-  test('news endpoint uses the requested tag API', () {
-    expect(
-      EpisodeRepository.endpoint,
-      'http://podoc.jiamid.com/api/v1/tags/%E6%96%B0%E9%97%BB/episodes',
-    );
+  test('bundled episodes load as a complete local list', () async {
+    final page = await EpisodeRepository().loadPage();
+
+    expect(page.episodes, hasLength(20));
+    expect(page.episodes.first.videoId, 'vlHh6B5_-z4');
+    expect(page.episodes.last.videoId, 'y84USJTIlsU');
+    expect(page.nextCursor, isNull);
+    expect(page.hasMore, isFalse);
   });
 
   test('episode page parses playable videos and pagination', () {

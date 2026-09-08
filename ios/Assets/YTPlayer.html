@@ -20,7 +20,7 @@
 </head>
 <body>
   <iframe id="player" src="{{EMBED_URL}}" title="{{TITLE}}"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; web-share"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
     referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
   <script>
     var player = null;
@@ -207,6 +207,25 @@
     function exitFullscreen() {
       if (document.exitFullscreen) document.exitFullscreen();
       else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      return true;
+    }
+
+    function refreshPictureInPicture() {
+      var iframe = document.getElementById('player');
+      if (!iframe || !iframe.contentWindow) return;
+      iframe.contentWindow.postMessage({
+        source: 'flutter_youtube_player_pip', action: 'refresh'
+      }, 'https://www.youtube.com');
+    }
+
+    function requestPictureInPicture(active, requestId) {
+      var iframe = document.getElementById('player');
+      if (!iframe || !iframe.contentWindow) return false;
+      iframe.contentWindow.postMessage({
+        source: 'flutter_youtube_player_pip',
+        active: active === true,
+        requestId: requestId
+      }, 'https://www.youtube.com');
       return true;
     }
 

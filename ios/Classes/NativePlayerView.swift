@@ -8,10 +8,137 @@ final class NativePlayerView: NSObject,
   private static let processPool = WKProcessPool()
   private static let resumePlayRetryInterval = 0.4
   private static let maximumResumePlayAttempts = 8
+  private static let pictureInPictureCommandTimeout = 4.0
   private static let videoIdPattern = try! NSRegularExpression(
     pattern: "^[A-Za-z0-9_-]{11}$"
   )
   private static var cachedTemplate: String?
+  private static let pictureInPictureBridge = #"""
+    (function () {
+      if (window.parent === window || window.location.hostname !== 'www.youtube.com') return;
+      if (window.__flutterYouTubePictureInPictureBridge) return;
+      window.__flutterYouTubePictureInPictureBridge = true;
+
+      var trackedVideo = null;
+      var trackedAvailability = null;
+      var trackedActive = null;
+
+      function sendEvent(name, data) {
+        if (!window.webkit || !window.webkit.messageHandlers.youtubeEvent) return;
+        window.webkit.messageHandlers.youtubeEvent.postMessage({ event: name, data: data });
+      }
+
+      function supportsPictureInPicture(video) {
+        if (!video || video.readyState === 0 || video.disablePictureInPicture) return false;
+        if (typeof video.webkitSetPresentationMode === 'function') {
+          return typeof video.webkitSupportsPresentationMode !== 'function' ||
+            video.webkitSupportsPresentationMode('picture-in-picture');
+        }
+        return document.pictureInPictureEnabled === true &&
+          typeof video.requestPictureInPicture === 'function';
+      }
+
+      function isPictureInPicture(video) {
+        if (!video) return false;
+        return video.webkitPresentationMode === 'picture-in-picture' ||
+          document.pictureInPictureElement === video;
+      }
+
+      function reportState() {
+        var availability = supportsPictureInPicture(trackedVideo);
+        var active = isPictureInPicture(trackedVideo);
+        if (availability !== trackedAvailability) {
+          trackedAvailability = availability;
+          sendEvent('PictureInPictureAvailability', availability);
+        }
+        if (active !== trackedActive) {
+          trackedActive = active;
+          sendEvent('PictureInPictureStateChange', active);
+        }
+      }
+
+      function detachVideo() {
+        if (!trackedVideo) return;
+        trackedVideo.removeEventListener('loadedmetadata', reportState);
+        trackedVideo.removeEventListener('canplay', reportState);
+        trackedVideo.removeEventListener('emptied', reportState);
+        trackedVideo.removeEventListener('webkitpresentationmodechanged', reportState);
+        trackedVideo.removeEventListener('enterpictureinpicture', reportState);
+        trackedVideo.removeEventListener('leavepictureinpicture', reportState);
+        trackedVideo = null;
+        trackedAvailability = null;
+        trackedActive = null;
+      }
+
+      function findVideo() {
+        var video = document.querySelector('video');
+        if (video === trackedVideo) {
+          reportState();
+          return video;
+        }
+        detachVideo();
+        if (!video) {
+          reportState();
+          return null;
+        }
+        trackedVideo = video;
+        video.addEventListener('loadedmetadata', reportState);
+        video.addEventListener('canplay', reportState);
+        video.addEventListener('emptied', reportState);
+        video.addEventListener('webkitpresentationmodechanged', reportState);
+        video.addEventListener('enterpictureinpicture', reportState);
+        video.addEventListener('leavepictureinpicture', reportState);
+        reportState();
+        return video;
+      }
+
+      function fail(error, requestId) {
+        var message = error && error.message ? error.message : String(error);
+        sendEvent('PictureInPictureError', { message: message, requestId: requestId });
+      }
+
+      function setPictureInPicture(active, requestId) {
+        var video = findVideo();
+        if (!video || (active && !supportsPictureInPicture(video))) {
+          fail('Picture in Picture is unavailable for the current video', requestId);
+          return;
+        }
+        try {
+          if (typeof video.webkitSetPresentationMode === 'function') {
+            video.webkitSetPresentationMode(active ? 'picture-in-picture' : 'inline');
+            return;
+          }
+          var operation = active
+            ? video.requestPictureInPicture()
+            : document.exitPictureInPicture();
+          if (operation && typeof operation.catch === 'function') {
+            operation.catch(function (error) { fail(error, requestId); });
+          }
+        } catch (error) {
+          fail(error, requestId);
+        }
+      }
+
+      window.addEventListener('message', function (event) {
+        if (event.source !== window.parent || event.origin !== 'http://example.com') return;
+        var data = event.data;
+        if (!data || data.source !== 'flutter_youtube_player_pip') return;
+        if (data.action === 'refresh') {
+          trackedAvailability = null;
+          trackedActive = null;
+          findVideo();
+          return;
+        }
+        setPictureInPicture(data.active === true, data.requestId);
+      });
+
+      var observer = new MutationObserver(findVideo);
+      if (document.documentElement) {
+        observer.observe(document.documentElement, { childList: true, subtree: true });
+      }
+      findVideo();
+    })();
+    """#
 
   let rootView: UIView
   private let webView: WKWebView
@@ -35,6 +162,33 @@ final class NativePlayerView: NSObject,
   private var resumePlayAttempt = 0
   private var resumePlayRetryGeneration = 0
   private var resumePlayRetryWorkItem: DispatchWorkItem?
+  private var pictureInPictureAvailable = false
+  private var pictureInPictureActive = false
+  private var pendingPictureInPictureTarget: Bool?
+  private var pendingPictureInPictureResult: FlutterResult?
+  private var pictureInPictureTimeoutWorkItem: DispatchWorkItem?
+  private var pictureInPictureRequestId = 0
+
+  private var keepsPictureInPictureAlive: Bool {
+    pictureInPictureActive || pendingPictureInPictureTarget == true
+  }
+
+  // 保留页面的暂停意图，等 PiP 退出或启动失败后再执行。
+  private func applyDeferredSuspension() {
+    guard !keepsPictureInPictureAlive, suspended || prewarming else { return }
+    cancelResumePlayRetry()
+    evaluate("requestPause()")
+    webView.isHidden = !prewarming
+    if prewarming && ready { hideLoadingCover() }
+    else { showLoadingCover() }
+  }
+
+  private func resetPictureInPictureState() {
+    pictureInPictureAvailable = false
+    pictureInPictureActive = false
+    event("pictureInPictureAvailability", values: ["value": false])
+    event("pictureInPicture", values: ["value": false])
+  }
 
   var isInvalidated: Bool { invalidated }
 
@@ -46,11 +200,16 @@ final class NativePlayerView: NSObject,
     configuration.processPool = Self.processPool
     configuration.websiteDataStore = .default()
     configuration.allowsInlineMediaPlayback = true
-    configuration.allowsPictureInPictureMediaPlayback = false
+    configuration.allowsPictureInPictureMediaPlayback = true
     configuration.mediaTypesRequiringUserActionForPlayback = []
     if #available(iOS 15.4, *) {
       configuration.preferences.isElementFullscreenEnabled = true
     }
+    configuration.userContentController.addUserScript(WKUserScript(
+      source: Self.pictureInPictureBridge,
+      injectionTime: .atDocumentEnd,
+      forMainFrameOnly: false
+    ))
     configuration.userContentController.add(messageHandler, name: "youtubeEvent")
     webView = WKWebView(frame: rootView.bounds, configuration: configuration)
     loadingCover = UIView(frame: rootView.bounds)
@@ -104,9 +263,16 @@ final class NativePlayerView: NSObject,
 
   func unbind() {
     guard channel != nil else { return }
+    let discardAfterUnbind = keepsPictureInPictureAlive
+    cancelPendingPictureInPicture(
+      code: "pip_cancelled",
+      message: "The player was detached before Picture in Picture changed"
+    )
     wantsToPlay = false
     cancelResumePlayRetry()
     evaluate("requestPause()")
+    // 仍在 PiP 转换中的 WebView 不可租给另一个播放器。
+    if discardAfterUnbind { invalidated = true }
     channel?.setMethodCallHandler(nil)
     channel = nil
     prewarming = false
@@ -172,17 +338,12 @@ final class NativePlayerView: NSObject,
     case "suspend":
       suspended = true
       prewarming = false
-      cancelResumePlayRetry()
-      evaluate("requestPause()")
-      showLoadingCover()
-      webView.isHidden = true
+      applyDeferredSuspension()
     case "prewarm":
       prewarming = true
-      webView.isHidden = false
       // suspend 发出的 JavaScript 可能在 WKWebView 再次可运行后才落地；
       // 预热时重新暂停，保证迟到的 pause 不会覆盖随后的 resume 播放请求。
-      evaluate("requestPause()")
-      if ready { loadingCover.isHidden = true }
+      applyDeferredSuspension()
     case "resume":
       let shouldPlay = arguments?["play"] as? Bool ?? wantsToPlay
       wantsToPlay = shouldPlay
@@ -190,7 +351,7 @@ final class NativePlayerView: NSObject,
       prewarming = false
       webView.isHidden = false
       if ready { loadingCover.isHidden = true }
-      if shouldPlay { startResumePlayRetry() }
+      if shouldPlay && !keepsPictureInPictureAlive { startResumePlayRetry() }
       else { cancelResumePlayRetry() }
     case "mute":
       wantsMuted = true
@@ -206,6 +367,12 @@ final class NativePlayerView: NSObject,
       if rate.isFinite && rate > 0 { evaluate("setPlaybackRate(\(rate))") }
     case "exitFullscreen":
       evaluate("exitFullscreen()")
+    case "enterPictureInPicture":
+      setPictureInPicture(true, result: result)
+      return
+    case "exitPictureInPicture":
+      setPictureInPicture(false, result: result)
+      return
     case "openInYouTube":
       guard let id = videoId,
             let url = URL(string: "https://www.youtube.com/watch?v=\(id)") else {
@@ -242,6 +409,7 @@ final class NativePlayerView: NSObject,
     forceReload: Bool
   ) {
     guard !invalidated else { return }
+    cancelPendingPictureInPicture(code: "pip_cancelled", message: "The video is changing")
     cancelResumePlayRetry()
     let changed = id != videoId
     videoId = id
@@ -269,6 +437,7 @@ final class NativePlayerView: NSObject,
       event("loadError", values: ["message": "Unable to read YTPlayer.html"])
       return
     }
+    resetPictureInPictureState()
     prepared = true
     messageHandler.markNotReady()
     ready = false
@@ -327,6 +496,94 @@ final class NativePlayerView: NSObject,
     webView.evaluateJavaScript(source)
   }
 
+  private func setPictureInPicture(
+    _ active: Bool,
+    result: @escaping FlutterResult
+  ) {
+    guard !invalidated else {
+      result(FlutterError(
+        code: "pip_unavailable",
+        message: "The player is unavailable",
+        details: nil
+      ))
+      return
+    }
+    guard pendingPictureInPictureResult == nil else {
+      result(FlutterError(
+        code: "pip_in_progress",
+        message: "Another Picture in Picture request is still in progress",
+        details: nil
+      ))
+      return
+    }
+    if pictureInPictureActive == active {
+      result(nil)
+      return
+    }
+    if active && !pictureInPictureAvailable {
+      result(FlutterError(
+        code: "pip_unavailable",
+        message: "Picture in Picture is unavailable for the current video",
+        details: nil
+      ))
+      return
+    }
+    pictureInPictureRequestId += 1
+    let requestId = pictureInPictureRequestId
+    pendingPictureInPictureTarget = active
+    pendingPictureInPictureResult = result
+    cancelResumePlayRetry()
+    let timeout = DispatchWorkItem { [weak self] in
+      guard let self, self.pictureInPictureRequestId == requestId else { return }
+      self.cancelPendingPictureInPicture(
+        code: "pip_timeout",
+        message: "Timed out while changing Picture in Picture state"
+      )
+    }
+    pictureInPictureTimeoutWorkItem = timeout
+    DispatchQueue.main.asyncAfter(
+      deadline: .now() + Self.pictureInPictureCommandTimeout,
+      execute: timeout
+    )
+    webView.evaluateJavaScript("requestPictureInPicture(\(active ? "true" : "false"),\(requestId))") {
+      [weak self] value, error in
+      guard let self, self.pictureInPictureRequestId == requestId,
+            self.pendingPictureInPictureResult != nil else { return }
+      if let error {
+        self.cancelPendingPictureInPicture(
+          code: "pip_failed",
+          message: error.localizedDescription
+        )
+      } else if value as? Bool != true {
+        self.cancelPendingPictureInPicture(
+          code: "pip_failed",
+          message: "The embedded player did not accept the Picture in Picture request"
+        )
+      }
+    }
+  }
+
+  private func completePendingPictureInPictureIfNeeded(active: Bool) {
+    guard pendingPictureInPictureTarget == active,
+          let result = pendingPictureInPictureResult else { return }
+    pictureInPictureTimeoutWorkItem?.cancel()
+    pictureInPictureTimeoutWorkItem = nil
+    pendingPictureInPictureTarget = nil
+    pendingPictureInPictureResult = nil
+    applyDeferredSuspension()
+    result(nil)
+  }
+
+  private func cancelPendingPictureInPicture(code: String, message: String) {
+    guard let result = pendingPictureInPictureResult else { return }
+    pictureInPictureTimeoutWorkItem?.cancel()
+    pictureInPictureTimeoutWorkItem = nil
+    pendingPictureInPictureTarget = nil
+    pendingPictureInPictureResult = nil
+    applyDeferredSuspension()
+    result(FlutterError(code: code, message: message, details: nil))
+  }
+
   private func switchVideo(
     _ id: String,
     autoplay: Bool,
@@ -344,6 +601,7 @@ final class NativePlayerView: NSObject,
       if error == nil, value as? Bool == true {
         // 复用 WebView 时，切换命令被目标播放器接受后才通知 Dart 可以补发控制命令。
         self.event("ready")
+        self.evaluate("refreshPictureInPicture()")
         return
       }
       self.prepared = false
@@ -366,9 +624,16 @@ final class NativePlayerView: NSObject,
           let payload = message.body as? [String: Any],
           let type = payload["event"] as? String else { return }
     let data = payload["data"]
+    if type.hasPrefix("PictureInPicture") {
+      let host = message.frameInfo.request.url?.host?.lowercased()
+      guard host == "youtube.com" || host?.hasSuffix(".youtube.com") == true else {
+        return
+      }
+    }
     switch type {
     case "Ready":
       ready = true
+      evaluate("refreshPictureInPicture()")
       if prewarming { hideLoadingCover() }
       if videoId != shellVideoId, let id = videoId {
         switchVideo(id, autoplay: wantsToPlay, startSeconds: startSeconds)
@@ -426,6 +691,29 @@ final class NativePlayerView: NSObject,
       ])
     case "FullscreenChange":
       event("fullscreen", values: ["value": data as? Bool ?? false])
+    case "PictureInPictureAvailability":
+      pictureInPictureAvailable = data as? Bool ?? false
+      event("pictureInPictureAvailability", values: [
+        "value": pictureInPictureAvailable,
+      ])
+      if !pictureInPictureAvailable && pendingPictureInPictureTarget == true {
+        cancelPendingPictureInPicture(
+          code: "pip_unavailable",
+          message: "Picture in Picture became unavailable"
+        )
+      }
+    case "PictureInPictureStateChange":
+      pictureInPictureActive = data as? Bool ?? false
+      event("pictureInPicture", values: ["value": pictureInPictureActive])
+      completePendingPictureInPictureIfNeeded(active: pictureInPictureActive)
+      applyDeferredSuspension()
+    case "PictureInPictureError":
+      guard let error = data as? [String: Any],
+            (error["requestId"] as? NSNumber)?.intValue == pictureInPictureRequestId else { return }
+      cancelPendingPictureInPicture(
+        code: "pip_failed",
+        message: error["message"] as? String ?? "Picture in Picture failed"
+      )
     case "Error":
       cancelResumePlayRetry()
       hideLoadingCover()
@@ -448,8 +736,13 @@ final class NativePlayerView: NSObject,
   }
 
   func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+    cancelPendingPictureInPicture(
+      code: "pip_failed",
+      message: "The iOS WebKit content process exited"
+    )
     cancelResumePlayRetry()
     invalidated = true
+    resetPictureInPictureState()
     prepared = false
     messageHandler.markNotReady()
     ready = false
@@ -482,8 +775,13 @@ final class NativePlayerView: NSObject,
   private func markLoadFailed(_ error: Error) {
     let nsError = error as NSError
     guard nsError.code != NSURLErrorCancelled else { return }
+    cancelPendingPictureInPicture(
+      code: "pip_failed",
+      message: nsError.localizedDescription
+    )
     cancelResumePlayRetry()
     prepared = false
+    resetPictureInPictureState()
     messageHandler.markNotReady()
     ready = false
     hideLoadingCover()
@@ -521,6 +819,7 @@ final class NativePlayerView: NSObject,
       guard generation == self.resumePlayRetryGeneration else { return }
       guard !self.invalidated,
             self.channel != nil,
+            !self.keepsPictureInPictureAlive,
             !self.suspended,
             self.wantsToPlay,
             self.resumePlayAttempt < Self.maximumResumePlayAttempts else {
@@ -547,6 +846,10 @@ final class NativePlayerView: NSObject,
 
   func destroy() {
     guard !destroyed else { return }
+    cancelPendingPictureInPicture(
+      code: "pip_cancelled",
+      message: "The player was destroyed before Picture in Picture changed"
+    )
     cancelResumePlayRetry()
     if !invalidated { evaluate("requestPause()") }
     destroyed = true

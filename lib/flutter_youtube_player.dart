@@ -76,6 +76,8 @@ class YouTubePlayerValue {
     this.isMuted = false,
     this.volume = 100,
     this.isFullscreen = false,
+    this.isPictureInPictureAvailable = false,
+    this.isPictureInPicture = false,
     this.errorCode,
     this.errorMessage,
   });
@@ -95,6 +97,8 @@ class YouTubePlayerValue {
   final bool isMuted;
   final int volume;
   final bool isFullscreen;
+  final bool isPictureInPictureAvailable;
+  final bool isPictureInPicture;
   final int? errorCode;
   final String? errorMessage;
 
@@ -122,6 +126,8 @@ class YouTubePlayerValue {
     bool? isMuted,
     int? volume,
     bool? isFullscreen,
+    bool? isPictureInPictureAvailable,
+    bool? isPictureInPicture,
     int? errorCode,
     String? errorMessage,
     bool clearError = false,
@@ -144,6 +150,9 @@ class YouTubePlayerValue {
     isMuted: isMuted ?? this.isMuted,
     volume: volume ?? this.volume,
     isFullscreen: isFullscreen ?? this.isFullscreen,
+    isPictureInPictureAvailable:
+        isPictureInPictureAvailable ?? this.isPictureInPictureAvailable,
+    isPictureInPicture: isPictureInPicture ?? this.isPictureInPicture,
     errorCode: clearError ? null : errorCode ?? this.errorCode,
     errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
   );
@@ -185,6 +194,8 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
   late bool _wantsToPlay;
   late bool _wantsMuted;
   bool _isChannelActivating = false;
+  Object? _pictureInPictureRequest;
+  bool _isEnteringPictureInPicture = false;
 
   // 递增该值会通知 Widget 丢弃旧平台视图并创建一个新实例。
   int _viewGeneration = 0;
@@ -251,6 +262,8 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
   }
 
   void _detach() {
+    _pictureInPictureRequest = null;
+    _isEnteringPictureInPicture = false;
     _channel?.setMethodCallHandler(null);
     _channel = null;
     _isChannelActivating = false;
@@ -295,6 +308,8 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
       duration: Duration.zero,
       loadedFraction: 0,
       loadingProgress: 0,
+      isPictureInPictureAvailable: false,
+      isPictureInPicture: false,
       clearError: true,
       clearMetadata: true,
     );
@@ -327,6 +342,47 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
   Future<void> resume() =>
       _invoke('resume', <String, Object>{'play': _wantsToPlay});
   Future<void> exitFullscreen() => _invoke('exitFullscreen');
+
+  /// 在 iOS 上进入系统画中画。
+  ///
+  /// 视频必须已经开始播放，且 [YouTubePlayerValue.isPictureInPictureAvailable]
+  /// 为 `true`。Android 端目前会返回不支持错误。
+  Future<void> enterPictureInPicture() => _setPictureInPicture(true);
+
+  /// 退出 iOS 系统画中画并回到内嵌播放器。
+  Future<void> exitPictureInPicture() => _setPictureInPicture(false);
+
+  Future<void> _setPictureInPicture(bool active) async {
+    final channel = _channel;
+    // PiP 依赖当前视图与用户操作，不应排队到另一个视频或视图上执行。
+    if (_disposed || channel == null || _isChannelActivating) {
+      throw PlatformException(
+        code: 'pip_unavailable',
+        message: 'Player is not attached',
+      );
+    }
+    if (_pictureInPictureRequest != null) {
+      throw PlatformException(
+        code: 'pip_in_progress',
+        message: 'A PiP request is pending',
+      );
+    }
+    final request = Object();
+    _pictureInPictureRequest = request;
+    _isEnteringPictureInPicture = active;
+    notifyListeners();
+    try {
+      await channel.invokeMethod<void>(
+        active ? 'enterPictureInPicture' : 'exitPictureInPicture',
+      );
+    } finally {
+      if (identical(_pictureInPictureRequest, request)) {
+        _pictureInPictureRequest = null;
+        _isEnteringPictureInPicture = false;
+        if (!_disposed) notifyListeners();
+      }
+    }
+  }
 
   /// 使用系统支持的 YouTube 应用或浏览器打开当前视频。
   Future<void> openInYouTube() => _invoke('openInYouTube');
@@ -383,6 +439,8 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
       loadedFraction: 0,
       loadingProgress: 0,
       isFullscreen: false,
+      isPictureInPictureAvailable: false,
+      isPictureInPicture: false,
       clearError: true,
       clearMetadata: true,
     );
@@ -462,6 +520,14 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
         );
       case 'fullscreen':
         value = value.copyWith(isFullscreen: event['value'] as bool? ?? false);
+      case 'pictureInPictureAvailability':
+        value = value.copyWith(
+          isPictureInPictureAvailable: event['value'] as bool? ?? false,
+        );
+      case 'pictureInPicture':
+        value = value.copyWith(
+          isPictureInPicture: event['value'] as bool? ?? false,
+        );
       case 'autoplayBlocked':
         value = value.copyWith(isAutoplayBlocked: true);
       case 'youtubeError':
@@ -474,6 +540,8 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
         );
       case 'loadError':
         value = value.copyWith(
+          isPictureInPictureAvailable: false,
+          isPictureInPicture: false,
           isReady: false,
           errorMessage:
               event['message'] as String? ?? 'The player is unavailable',
@@ -482,9 +550,13 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
         // WebView 渲染进程退出后废弃旧通道，并触发平台视图重新创建。
         _channel?.setMethodCallHandler(null);
         _channel = null;
+        _pictureInPictureRequest = null;
+        _isEnteringPictureInPicture = false;
         _viewGeneration++;
         _nativeInitialOverlayDismissed = false;
         value = value.copyWith(
+          isPictureInPictureAvailable: false,
+          isPictureInPicture: false,
           isReady: false,
           errorMessage:
               event['message'] as String? ?? 'The player is unavailable',
@@ -715,6 +787,7 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
     }
     _syncLoadingIndicatorVisibility();
     _syncPlayPauseButtonVisibility();
+    _syncNativePlayerMode();
   }
 
   void _resetPlaybackState() {
@@ -844,8 +917,13 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
         (_secondaryRouteAnimation?.value ?? 1) < 1;
     final isCoverRouteRevealing =
         _isCoverRoutePopping || isInteractiveCoverRouteRevealing;
+    final keepAliveForPictureInPicture =
+        widget.controller.value.isPictureInPicture ||
+        widget.controller._isEnteringPictureInPicture;
     final desiredMode =
-        _isAppSuspended || _isRouteExiting || isInteractiveRouteExiting
+        (_isAppSuspended && !keepAliveForPictureInPicture) ||
+            _isRouteExiting ||
+            isInteractiveRouteExiting
         ? _NativePlayerMode.suspended
         : _isRouteCovered
         ? isCoverRouteRevealing

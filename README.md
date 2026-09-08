@@ -36,8 +36,49 @@ await controller.load(
 await controller.mute();
 await controller.setVolume(70);
 await controller.setPlaybackRate(1.5);
+if (controller.value.isPictureInPictureAvailable) {
+  await controller.enterPictureInPicture();
+}
+await controller.exitPictureInPicture();
 await controller.openInYouTube();
 ```
+
+## iOS Picture in Picture
+
+The YouTube IFrame API does not expose a Picture in Picture method or event.
+On iOS, this plugin keeps the official embedded player and asks its HTML5 video
+element to enter WebKit Picture in Picture presentation mode. It does not
+resolve or play YouTube media URLs outside the IFrame player.
+
+Start playback first and wait for
+`controller.value.isPictureInPictureAvailable` before calling
+`enterPictureInPicture()`. The returned future completes only after iOS reports
+the actual state change. `controller.value.isPictureInPicture` tracks both
+programmatic and system state changes.
+
+The plugin does not enter PiP automatically when the app moves to the
+background. Call `enterPictureInPicture()` from an explicit user action before
+backgrounding when that behavior is required.
+
+The host iOS app must enable **Background Modes > Audio, AirPlay, and Picture
+in Picture**. The corresponding `Info.plist` entry is:
+
+```xml
+<key>UIBackgroundModes</key>
+<array>
+  <string>audio</string>
+</array>
+```
+
+The app must also use an `AVAudioSession` playback category. Configure this in
+the app or with the app's existing audio-session package; the plugin does not
+replace global audio-session policy:
+
+```swift
+try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
+```
+
+Android Picture in Picture is not implemented yet.
 
 The widget pauses its native player while the app is inactive, while its route
 is covered, and during route removal. A retained player is detached from its

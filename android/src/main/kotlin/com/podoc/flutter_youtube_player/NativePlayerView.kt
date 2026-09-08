@@ -220,6 +220,14 @@ internal class NativePlayerView(
         if (rate.isFinite() && rate > 0) evaluate("setPlaybackRate($rate)")
       }
       "exitFullscreen" -> hideCustomView()
+      "enterPictureInPicture", "exitPictureInPicture" -> {
+        result.error(
+          "pip_unsupported",
+          "Picture in Picture is currently implemented on iOS only",
+          null,
+        )
+        return
+      }
       "openInYouTube" -> {
         if (!openInYouTube()) {
           result.error("open_failed", "Unable to open this video in YouTube", null)

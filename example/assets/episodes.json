@@ -1,0 +1,527 @@
+{
+    "page_size": 20,
+    "next_cursor": 12414,
+    "has_more": true,
+    "episodes": [
+        {
+            "id": 11085,
+            "video_id": "vlHh6B5_-z4",
+            "platform": "youtube",
+            "title": "Good Morning America Full Broadcast - Tuesday, July 21, 2026",
+            "url": "https://www.youtube.com/watch?v=vlHh6B5_-z4",
+            "thumbnail_url": "https://i.ytimg.com/vi/vlHh6B5_-z4/mqdefault.jpg",
+            "duration": "1:09:06",
+            "language": "",
+            "is_featured": true,
+            "summary": "Good Morning America Full Broadcast - Tuesday, July 21, 2026",
+            "translated_summary": "Good Morning America Full Broadcast - Tuesday, July 21, 2026",
+            "tags": [
+                "YouTube"
+            ],
+            "podcast": {
+                "id": 11085,
+                "title": "ABC News",
+                "host": "ABC News",
+                "cover_url": "https://yt3.googleusercontent.com/GJ8V0NX6NddGh9bf4zED4tsjPjjBK2hdp5FWHMy09pV7sdSkkE3yEhCRSch4waEb9ZavyUrWfw=s900-c-k-c0x00ffffff-no-rj",
+                "source_url": "https://www.youtube.com/channel/UCBi2mrWuNuyYy4gbM6fU18Q",
+                "channel_id": "UCBi2mrWuNuyYy4gbM6fU18Q"
+            },
+            "published_at": "July 21, 2026",
+            "description": "Good Morning America Full Broadcast - Tuesday, July 21, 2026"
+        },
+        {
+            "id": 11056,
+            "video_id": "HCzny8-tQFk",
+            "platform": "youtube",
+            "title": "Nightline Full Broadcast — Monday, July 20, 2026",
+            "url": "https://www.youtube.com/watch?v=HCzny8-tQFk",
+            "thumbnail_url": "https://i.ytimg.com/vi/HCzny8-tQFk/mqdefault.jpg",
+            "duration": "19:29",
+            "language": "",
+            "is_featured": false,
+            "summary": "Nightline Full Broadcast — Monday, July 20, 2026",
+            "translated_summary": "Nightline Full Broadcast — Monday, July 20, 2026",
+            "tags": [
+                "YouTube"
+            ],
+            "podcast": {
+                "id": 11056,
+                "title": "ABC News",
+                "host": "ABC News",
+                "cover_url": "https://yt3.googleusercontent.com/GJ8V0NX6NddGh9bf4zED4tsjPjjBK2hdp5FWHMy09pV7sdSkkE3yEhCRSch4waEb9ZavyUrWfw=s900-c-k-c0x00ffffff-no-rj",
+                "source_url": "https://www.youtube.com/channel/UCBi2mrWuNuyYy4gbM6fU18Q",
+                "channel_id": "UCBi2mrWuNuyYy4gbM6fU18Q"
+            },
+            "published_at": "July 20, 2026",
+            "description": "Nightline Full Broadcast — Monday, July 20, 2026"
+        },
+        {
+            "id": 1745,
+            "video_id": "y0J8hL6u83E",
+            "platform": "youtube",
+            "title": "ABC World News Tonight with David Muir Full Broadcast - July 15, 2026",
+            "url": "https://www.youtube.com/watch?v=y0J8hL6u83E",
+            "thumbnail_url": "https://i.ytimg.com/vi/y0J8hL6u83E/mqdefault.jpg",
+            "duration": "19:54",
+            "language": "",
+            "is_featured": false,
+            "summary": "ABC World News Tonight with David Muir Full Broadcast - July 15, 2026",
+            "translated_summary": "ABC World News Tonight with David Muir Full Broadcast - July 15, 2026",
+            "tags": [
+                "YouTube"
+            ],
+            "podcast": {
+                "id": 1745,
+                "title": "ABC News",
+                "host": "ABC News",
+                "cover_url": "https://yt3.googleusercontent.com/GJ8V0NX6NddGh9bf4zED4tsjPjjBK2hdp5FWHMy09pV7sdSkkE3yEhCRSch4waEb9ZavyUrWfw=s900-c-k-c0x00ffffff-no-rj",
+                "source_url": "https://www.youtube.com/channel/UCBi2mrWuNuyYy4gbM6fU18Q",
+                "channel_id": "UCBi2mrWuNuyYy4gbM6fU18Q"
+            },
+            "published_at": "July 15, 2026",
+            "description": "ABC World News Tonight with David Muir Full Broadcast - July 15, 2026"
+        },
+        {
+            "id": 1744,
+            "video_id": "mW55WVOOjsg",
+            "platform": "youtube",
+            "title": "ABC News Live Prime: July 15, 2026",
+            "url": "https://www.youtube.com/watch?v=mW55WVOOjsg",
+            "thumbnail_url": "https://i.ytimg.com/vi/mW55WVOOjsg/mqdefault.jpg",
+            "duration": "45:45",
+            "language": "",
+            "is_featured": false,
+            "summary": "ABC News Live Prime: July 15, 2026",
+            "translated_summary": "ABC News Live Prime: July 15, 2026",
+            "tags": [
+                "YouTube"
+            ],
+            "podcast": {
+                "id": 1744,
+                "title": "ABC News",
+                "host": "ABC News",
+                "cover_url": "https://yt3.googleusercontent.com/GJ8V0NX6NddGh9bf4zED4tsjPjjBK2hdp5FWHMy09pV7sdSkkE3yEhCRSch4waEb9ZavyUrWfw=s900-c-k-c0x00ffffff-no-rj",
+                "source_url": "https://www.youtube.com/channel/UCBi2mrWuNuyYy4gbM6fU18Q",
+                "channel_id": "UCBi2mrWuNuyYy4gbM6fU18Q"
+            },
+            "published_at": "July 15, 2026",
+            "description": "ABC News Live Prime: July 15, 2026"
+        },
+        {
+            "id": 1606,
+            "video_id": "X3TWFjb2M1I",
+            "platform": "youtube",
+            "title": "Good Morning America Full Broadcast - Wednesday, July 15, 2026",
+            "url": "https://www.youtube.com/watch?v=X3TWFjb2M1I",
+            "thumbnail_url": "https://i.ytimg.com/vi/X3TWFjb2M1I/mqdefault.jpg",
+            "duration": "1:06:16",
+            "language": "",
+            "is_featured": false,
+            "summary": "Good Morning America Full Broadcast - Wednesday, July 15, 2026",
+            "translated_summary": "Good Morning America Full Broadcast - Wednesday, July 15, 2026",
+            "tags": [
+                "YouTube"
+            ],
+            "podcast": {
+                "id": 1606,
+                "title": "ABC News",
+                "host": "ABC News",
+                "cover_url": "https://yt3.googleusercontent.com/GJ8V0NX6NddGh9bf4zED4tsjPjjBK2hdp5FWHMy09pV7sdSkkE3yEhCRSch4waEb9ZavyUrWfw=s900-c-k-c0x00ffffff-no-rj",
+                "source_url": "https://www.youtube.com/channel/UCBi2mrWuNuyYy4gbM6fU18Q",
+                "channel_id": "UCBi2mrWuNuyYy4gbM6fU18Q"
+            },
+            "published_at": "July 15, 2026",
+            "description": "Good Morning America Full Broadcast - Wednesday, July 15, 2026"
+        },
+        {
+            "id": 1598,
+            "video_id": "MGmKYQ18L90",
+            "platform": "youtube",
+            "title": "Nightline Full Broadcast — Tuesday, July 14, 2026",
+            "url": "https://www.youtube.com/watch?v=MGmKYQ18L90",
+            "thumbnail_url": "https://i.ytimg.com/vi/MGmKYQ18L90/mqdefault.jpg",
+            "duration": "19:07",
+            "language": "",
+            "is_featured": false,
+            "summary": "Nightline Full Broadcast — Tuesday, July 14, 2026",
+            "translated_summary": "Nightline Full Broadcast — Tuesday, July 14, 2026",
+            "tags": [
+                "YouTube"
+            ],
+            "podcast": {
+                "id": 1598,
+                "title": "ABC News",
+                "host": "ABC News",
+                "cover_url": "https://yt3.googleusercontent.com/GJ8V0NX6NddGh9bf4zED4tsjPjjBK2hdp5FWHMy09pV7sdSkkE3yEhCRSch4waEb9ZavyUrWfw=s900-c-k-c0x00ffffff-no-rj",
+                "source_url": "https://www.youtube.com/channel/UCBi2mrWuNuyYy4gbM6fU18Q",
+                "channel_id": "UCBi2mrWuNuyYy4gbM6fU18Q"
+            },
+            "published_at": "July 14, 2026",
+            "description": "Nightline Full Broadcast — Tuesday, July 14, 2026"
+        },
+        {
+            "id": 1563,
+            "video_id": "VDAzSJsk34U",
+            "platform": "youtube",
+            "title": "ABC News Live Prime: July 14, 2026",
+            "url": "https://www.youtube.com/watch?v=VDAzSJsk34U",
+            "thumbnail_url": "https://i.ytimg.com/vi/VDAzSJsk34U/mqdefault.jpg",
+            "duration": "47:33",
+            "language": "",
+            "is_featured": false,
+            "summary": "ABC News Live Prime: July 14, 2026",
+            "translated_summary": "ABC News Live Prime: July 14, 2026",
+            "tags": [
+                "YouTube"
+            ],
+            "podcast": {
+                "id": 1563,
+                "title": "ABC News",
+                "host": "ABC News",
+                "cover_url": "https://yt3.googleusercontent.com/GJ8V0NX6NddGh9bf4zED4tsjPjjBK2hdp5FWHMy09pV7sdSkkE3yEhCRSch4waEb9ZavyUrWfw=s900-c-k-c0x00ffffff-no-rj",
+                "source_url": "https://www.youtube.com/channel/UCBi2mrWuNuyYy4gbM6fU18Q",
+                "channel_id": "UCBi2mrWuNuyYy4gbM6fU18Q"
+            },
+            "published_at": "July 14, 2026",
+            "description": "ABC News Live Prime: July 14, 2026"
+        },
+        {
+            "id": 12427,
+            "video_id": "QMeGOVzfZNw",
+            "platform": "youtube",
+            "title": "'My colleague turned out to be my long lost brother' | BBC News",
+            "url": "https://www.youtube.com/watch?v=QMeGOVzfZNw",
+            "thumbnail_url": "https://i.ytimg.com/vi/QMeGOVzfZNw/mqdefault.jpg",
+            "duration": "6:01",
+            "language": "",
+            "is_featured": false,
+            "summary": "Dave Green and Andrea Urmston met when their jobs overlapped at Manchester Airport. They became friends, but later it emerged that Dave was actually Andrea’s brother who had been adopted 40 years earlier. In this video, they tell their extraordinary story. Subscribe to our channel here: https://bbc.in/bbcnews For the latest news download the BBC News app or visit BBC.com/news #BBCNews",
+            "translated_summary": "Dave Green and Andrea Urmston met when their jobs overlapped at Manchester Airport. They became friends, but later it emerged that Dave was actually Andrea’s brother who had been adopted 40 years earlier. In this video, they tell their extraordinary story. Subscribe to our channel here: https://bbc.in/bbcnews For the latest news download the BBC News app or visit BBC.com/news #BBCNews",
+            "tags": [
+                "YouTube"
+            ],
+            "podcast": {
+                "id": 12427,
+                "title": "BBC News",
+                "host": "BBC News",
+                "cover_url": "",
+                "source_url": "http://www.youtube.com/@BBCNews",
+                "channel_id": "UC16niRr50-MSBwiO3YDb3RA"
+            },
+            "published_at": "2026-07-24T05:00:32-07:00",
+            "description": "Dave Green and Andrea Urmston met when their jobs overlapped at Manchester Airport. They became friends, but later it emerged that Dave was actually Andrea’s brother who had been adopted 40 years earlier. In this video, they tell their extraordinary story. Subscribe to our channel here: https://bbc.in/bbcnews For the latest news download the BBC News app or visit BBC.com/news #BBCNews"
+        },
+        {
+            "id": 12425,
+            "video_id": "k55iSLxQEgg",
+            "platform": "youtube",
+            "title": "Adley made a WATER SLiDE inside SPACESTATiON!! We turned work into a Birthday Waterpark with Crew!",
+            "url": "https://www.youtube.com/watch?v=k55iSLxQEgg",
+            "thumbnail_url": "https://i.ytimg.com/vi/k55iSLxQEgg/mqdefault.jpg",
+            "duration": "41:51",
+            "language": "",
+            "is_featured": false,
+            "summary": "I made a iNDOOR WATERPARK!! LET'S BE FRIENDS -- https://goo.gl/a7ctjJ HEY EVERYBODY!! We snuck into the Spacestation and built a SURPRISE waterpark for Dad’s birthday the SPACESTATiON WATERPARK!! Work was CANCELLED for everyone that day and we partied ALL DAY LONG OHHH YEAHHH!! We turned the slide into a giant waterslide and everyone went down it again and again (there were some SUPER close calls haha)! We even had special guests join in, the Spacestation Gaming Astronaut and the Green Rainbow Ghost came down the slide with us!! We also had a pool filled with ORBEEZ, and stepping on those felt SO weird!! Then it was time for a HUGE pool party with an epic water fight and a full on pool noodle battle!! Once the park closed for business, we set up a nacho bar to refuel. We even got to premiere our newest family cartoon starring Mermaid Adley and the Octo-Alien!! It was such a special day, and I just know Dad had the BEST BIRTHDAY EVER!! my last video - Little Red ADLEY and a WOLF the SUMMER STORY!! made a 15 Chapter play with my daughter & our family https://www.youtube.com/watch?v=P4SPHtVHQP8 my dad's last video - A for ADLEY in the BEST PARADE EVER!! First 4th of July with Enzo! my Family at Freedom Festival https://www.youtube.com/watch?v=1BEpXLEW--w A for Adley Shorts - https://www.youtube.com/@AforAdleyShorts Best Day Ever Shorts - https://www.youtube.com/@BestDayEverShorts G for Gaming - https://www.youtube.com/@GforGaming Spacestation Animation - https://www.youtube.com/@SpacestationAnimation Bye vlog *pshhhhh*",
+            "translated_summary": "I made a iNDOOR WATERPARK!! LET'S BE FRIENDS -- https://goo.gl/a7ctjJ HEY EVERYBODY!! We snuck into the Spacestation and built a SURPRISE waterpark for Dad’s birthday the SPACESTATiON WATERPARK!! Work was CANCELLED for everyone that day and we partied ALL DAY LONG OHHH YEAHHH!! We turned the slide into a giant waterslide and everyone went down it again and again (there were some SUPER close calls haha)! We even had special guests join in, the Spacestation Gaming Astronaut and the Green Rainbow Ghost came down the slide with us!! We also had a pool filled with ORBEEZ, and stepping on those felt SO weird!! Then it was time for a HUGE pool party with an epic water fight and a full on pool noodle battle!! Once the park closed for business, we set up a nacho bar to refuel. We even got to premiere our newest family cartoon starring Mermaid Adley and the Octo-Alien!! It was such a special day, and I just know Dad had the BEST BIRTHDAY EVER!! my last video - Little Red ADLEY and a WOLF the SUMMER STORY!! made a 15 Chapter play with my daughter & our family https://www.youtube.com/watch?v=P4SPHtVHQP8 my dad's last video - A for ADLEY in the BEST PARADE EVER!! First 4th of July with Enzo! my Family at Freedom Festival https://www.youtube.com/watch?v=1BEpXLEW--w A for Adley Shorts - https://www.youtube.com/@AforAdleyShorts Best Day Ever Shorts - https://www.youtube.com/@BestDayEverShorts G for Gaming - https://www.youtube.com/@GforGaming Spacestation Animation - https://www.youtube.com/@SpacestationAnimation Bye vlog *pshhhhh*",
+            "tags": [
+                "YouTube"
+            ],
+            "podcast": {
+                "id": 12425,
+                "title": "A for Adley - Learning & Fun",
+                "host": "A for Adley - Learning & Fun",
+                "cover_url": "",
+                "source_url": "http://www.youtube.com/@AforAdley",
+                "channel_id": "UCBJuxfqZuiibvcwSc8ViGsQ"
+            },
+            "published_at": "2026-07-24T05:00:07-07:00",
+            "description": "I made a iNDOOR WATERPARK!! LET'S BE FRIENDS -- https://goo.gl/a7ctjJ HEY EVERYBODY!! We snuck into the Spacestation and built a SURPRISE waterpark for Dad’s birthday the SPACESTATiON WATERPARK!! Work was CANCELLED for everyone that day and we partied ALL DAY LONG OHHH YEAHHH!! We turned the slide into a giant waterslide and everyone went down it again and again (there were some SUPER close calls haha)! We even had special guests join in, the Spacestation Gaming Astronaut and the Green Rainbow Ghost came down the slide with us!! We also had a pool filled with ORBEEZ, and stepping on those felt SO weird!! Then it was time for a HUGE pool party with an epic water fight and a full on pool noodle battle!! Once the park closed for business, we set up a nacho bar to refuel. We even got to premiere our newest family cartoon starring Mermaid Adley and the Octo-Alien!! It was such a special day, and I just know Dad had the BEST BIRTHDAY EVER!! my last video - Little Red ADLEY and a WOLF the SUMMER STORY!! made a 15 Chapter play with my daughter & our family https://www.youtube.com/watch?v=P4SPHtVHQP8 my dad's last video - A for ADLEY in the BEST PARADE EVER!! First 4th of July with Enzo! my Family at Freedom Festival https://www.youtube.com/watch?v=1BEpXLEW--w A for Adley Shorts - https://www.youtube.com/@AforAdleyShorts Best Day Ever Shorts - https://www.youtube.com/@BestDayEverShorts G for Gaming - https://www.youtube.com/@GforGaming Spacestation Animation - https://www.youtube.com/@SpacestationAnimation Bye vlog *pshhhhh*"
+        },
+        {
+            "id": 12422,
+            "video_id": "fC7uOumXbe4",
+            "platform": "youtube",
+            "title": "Good Morning America: News to start your day | July 24",
+            "url": "https://www.youtube.com/watch?v=fC7uOumXbe4",
+            "thumbnail_url": "https://i.ytimg.com/vi/fC7uOumXbe4/mqdefault.jpg",
+            "duration": "16:09",
+            "language": "",
+            "is_featured": false,
+            "summary": "All the news you need to start your day from \"Good Morning America.\" ––– Subscribe to ABC News on YouTube: https://abcnews.visitlink.me/59aJ1G ABC News is your daily source of breaking national and world news, exclusive interviews and 24/7 live streaming coverage. https://abcnews.com Download the ABC News app for the latest headlines and alerts: https://abcnews.com/devices Connect with ABC News on social media: Facebook: https://www.facebook.com/ABCNews Instagram: https://www.instagram.com/abcnews TikTok: https://www.tiktok.com/@abcnews X: https://twitter.com/ABC Threads: https://www.threads.net/@abcnews WhatsApp: https://whatsapp.com/channel/0029VajTNakKWEKkXoAPIR11 LinkedIn: https://www.linkedin.com/company/abcnews",
+            "translated_summary": "All the news you need to start your day from \"Good Morning America.\" ––– Subscribe to ABC News on YouTube: https://abcnews.visitlink.me/59aJ1G ABC News is your daily source of breaking national and world news, exclusive interviews and 24/7 live streaming coverage. https://abcnews.com Download the ABC News app for the latest headlines and alerts: https://abcnews.com/devices Connect with ABC News on social media: Facebook: https://www.facebook.com/ABCNews Instagram: https://www.instagram.com/abcnews TikTok: https://www.tiktok.com/@abcnews X: https://twitter.com/ABC Threads: https://www.threads.net/@abcnews WhatsApp: https://whatsapp.com/channel/0029VajTNakKWEKkXoAPIR11 LinkedIn: https://www.linkedin.com/company/abcnews",
+            "tags": [
+                "YouTube"
+            ],
+            "podcast": {
+                "id": 12422,
+                "title": "ABC News",
+                "host": "ABC News",
+                "cover_url": "https://yt3.googleusercontent.com/GJ8V0NX6NddGh9bf4zED4tsjPjjBK2hdp5FWHMy09pV7sdSkkE3yEhCRSch4waEb9ZavyUrWfw=s900-c-k-c0x00ffffff-no-rj",
+                "source_url": "http://www.youtube.com/@ABCNews",
+                "channel_id": "UCBi2mrWuNuyYy4gbM6fU18Q"
+            },
+            "published_at": "2026-07-24T04:44:31-07:00",
+            "description": "All the news you need to start your day from \"Good Morning America.\" ––– Subscribe to ABC News on YouTube: https://abcnews.visitlink.me/59aJ1G ABC News is your daily source of breaking national and world news, exclusive interviews and 24/7 live streaming coverage. https://abcnews.com Download the ABC News app for the latest headlines and alerts: https://abcnews.com/devices Connect with ABC News on social media: Facebook: https://www.facebook.com/ABCNews Instagram: https://www.instagram.com/abcnews TikTok: https://www.tiktok.com/@abcnews X: https://twitter.com/ABC Threads: https://www.threads.net/@abcnews WhatsApp: https://whatsapp.com/channel/0029VajTNakKWEKkXoAPIR11 LinkedIn: https://www.linkedin.com/company/abcnews"
+        },
+        {
+            "id": 12426,
+            "video_id": "aLEB3x3nG5k",
+            "platform": "youtube",
+            "title": "Kiccha Sudeep New Movie 2026 Hindi Dubbed Scenes | Nithya Menen | South Movie | Aditya Movies",
+            "url": "https://www.youtube.com/watch?v=aLEB3x3nG5k",
+            "thumbnail_url": "https://i.ytimg.com/vi/aLEB3x3nG5k/mqdefault.jpg",
+            "duration": "26:00",
+            "language": "",
+            "is_featured": false,
+            "summary": "For More Entertainment, Watch ► https://www.youtube.com/playlist?list=PLaEL1LTyEXg3z4WVWOuxmbZGTwW6my0CZ ► https://www.youtube.com/playlist?list=PLaEL1LTyEXg0GcorB_6FKaISemi37asA9 Watch & Enjoy \"Golimaar 2\" Hindi Dubbed Movie (Kotigobba 2) Scenes, Starring Kiccha Sudeep, Nithya Menon, Prakash Raj, Music By D. Imman, Produced by Aditya Music India Pvt. Ltd & Direction By K. S. Ravikumar only on Aditya Movies. #Golimaar2 #SudeepKicha #NithyaMenen #HindiDubbedMovies #HindiMovie #SouthMovie #HindiDubbedMovies2026 #AdityaMovies Credits:- Film Name : Golimaar 2 Producer : Aditya Music India Pvt. Ltd Director : K.S.Ravikumar Music Director : D. Imman Actor : Kiccha Sudeep Actress: Nithya Menon Subscribe to Aditya Movies for all Latest, Popular, Blockbuster & Superhit Hindi Dubbed Videos. ------------------------------------------------------------------ For More Full Movies Subscribe to: ►https://www.youtube.com/adityamovies ►Like us on Facebook: http://www.facebook.com/adityamovies ►Follow us on Instagram: https://www.instagram.com/adityamovies For More Telugu Full Movies Subscribe to : ► https://www.youtube.com/@adityacinemalu ► Like us on Facebook: https://www.facebook.com/AdityaCinemalu ► Follow us on Instagram: https://www.instagram.com/adityacinemalu/ For Bhojpuri Full Movies, Subscribe to: ►https://bit.ly/3FkFd27 For Hit & Latest Music: ►https://www.youtube.com/user/adityamusic ►Follow us on Twitter: http://www.twitter.com/adityamusic ►Follow us on LinkedIn: http://bit.ly/2Pp6ze3 For Devotional Music: ►https://www.youtube.com/user/adityadevotional © 2026 Aditya Movies & Entertainments (India) LLP.",
+            "translated_summary": "For More Entertainment, Watch ► https://www.youtube.com/playlist?list=PLaEL1LTyEXg3z4WVWOuxmbZGTwW6my0CZ ► https://www.youtube.com/playlist?list=PLaEL1LTyEXg0GcorB_6FKaISemi37asA9 Watch & Enjoy \"Golimaar 2\" Hindi Dubbed Movie (Kotigobba 2) Scenes, Starring Kiccha Sudeep, Nithya Menon, Prakash Raj, Music By D. Imman, Produced by Aditya Music India Pvt. Ltd & Direction By K. S. Ravikumar only on Aditya Movies. #Golimaar2 #SudeepKicha #NithyaMenen #HindiDubbedMovies #HindiMovie #SouthMovie #HindiDubbedMovies2026 #AdityaMovies Credits:- Film Name : Golimaar 2 Producer : Aditya Music India Pvt. Ltd Director : K.S.Ravikumar Music Director : D. Imman Actor : Kiccha Sudeep Actress: Nithya Menon Subscribe to Aditya Movies for all Latest, Popular, Blockbuster & Superhit Hindi Dubbed Videos. ------------------------------------------------------------------ For More Full Movies Subscribe to: ►https://www.youtube.com/adityamovies ►Like us on Facebook: http://www.facebook.com/adityamovies ►Follow us on Instagram: https://www.instagram.com/adityamovies For More Telugu Full Movies Subscribe to : ► https://www.youtube.com/@adityacinemalu ► Like us on Facebook: https://www.facebook.com/AdityaCinemalu ► Follow us on Instagram: https://www.instagram.com/adityacinemalu/ For Bhojpuri Full Movies, Subscribe to: ►https://bit.ly/3FkFd27 For Hit & Latest Music: ►https://www.youtube.com/user/adityamusic ►Follow us on Twitter: http://www.twitter.com/adityamusic ►Follow us on LinkedIn: http://bit.ly/2Pp6ze3 For Devotional Music: ►https://www.youtube.com/user/adityadevotional © 2026 Aditya Movies & Entertainments (India) LLP.",
+            "tags": [
+                "YouTube"
+            ],
+            "podcast": {
+                "id": 12426,
+                "title": "Aditya Movies",
+                "host": "Aditya Movies",
+                "cover_url": "",
+                "source_url": "http://www.youtube.com/@adityamovies",
+                "channel_id": "UCX_uPA_dGf7wXjuMEaSKLJA"
+            },
+            "published_at": "2026-07-24T03:30:37-07:00",
+            "description": "For More Entertainment, Watch ► https://www.youtube.com/playlist?list=PLaEL1LTyEXg3z4WVWOuxmbZGTwW6my0CZ ► https://www.youtube.com/playlist?list=PLaEL1LTyEXg0GcorB_6FKaISemi37asA9 Watch & Enjoy \"Golimaar 2\" Hindi Dubbed Movie (Kotigobba 2) Scenes, Starring Kiccha Sudeep, Nithya Menon, Prakash Raj, Music By D. Imman, Produced by Aditya Music India Pvt. Ltd & Direction By K. S. Ravikumar only on Aditya Movies. #Golimaar2 #SudeepKicha #NithyaMenen #HindiDubbedMovies #HindiMovie #SouthMovie #HindiDubbedMovies2026 #AdityaMovies Credits:- Film Name : Golimaar 2 Producer : Aditya Music India Pvt. Ltd Director : K.S.Ravikumar Music Director : D. Imman Actor : Kiccha Sudeep Actress: Nithya Menon Subscribe to Aditya Movies for all Latest, Popular, Blockbuster & Superhit Hindi Dubbed Videos. ------------------------------------------------------------------ For More Full Movies Subscribe to: ►https://www.youtube.com/adityamovies ►Like us on Facebook: http://www.facebook.com/adityamovies ►Follow us on Instagram: https://www.instagram.com/adityamovies For More Telugu Full Movies Subscribe to : ► https://www.youtube.com/@adityacinemalu ► Like us on Facebook: https://www.facebook.com/AdityaCinemalu ► Follow us on Instagram: https://www.instagram.com/adityacinemalu/ For Bhojpuri Full Movies, Subscribe to: ►https://bit.ly/3FkFd27 For Hit & Latest Music: ►https://www.youtube.com/user/adityamusic ►Follow us on Twitter: http://www.twitter.com/adityamusic ►Follow us on LinkedIn: http://bit.ly/2Pp6ze3 For Devotional Music: ►https://www.youtube.com/user/adityadevotional © 2026 Aditya Movies & Entertainments (India) LLP."
+        },
+        {
+            "id": 12430,
+            "video_id": "st9uOTA75ME",
+            "platform": "youtube",
+            "title": "Gen Z wants the '90s back, but it's selective nostalgia | Engagement Party",
+            "url": "https://www.youtube.com/watch?v=st9uOTA75ME",
+            "thumbnail_url": "https://i.ytimg.com/vi/st9uOTA75ME/mqdefault.jpg",
+            "duration": "35:55",
+            "language": "",
+            "is_featured": false,
+            "summary": "The '90s are everywhere these days — clothes, music, TV — and brands are doing everything they can to capitalize on the revival. Audie and Ari explore what’s driving the modern fascination with a decade they lived through, what Gen Z's rose-colored glasses get wrong about the era, and what they wax nostalgic for (mix tapes!). Plus, comedian Rob Anderson joins Audie to discuss why nostalgia is so damn funny. Like what you heard? Sign up for our newsletter to catch up on the latest trends, obsessions and culture. Is there something in your feed you want Audie and Ari to talk about? Email us a video at engagementparty@cnn.com and we might feature you on the show. 00:00 Nostalgia for the '90s has gripped the culture. What's behind it? 0:40 Retailers are trying to cash in, and The Gap is at the top of that list 2:05 Are people nostalgic for the '90s, or are they just craving an analog life? 5:36 Even MAGA is on the '90s nostalgia train 7:02 Speaking of The Gap, they're not entirely nailing it — what's with the happy stripe mesh? 10:00 Ari does a trust fall and reveals his own '90s style 10:49 Not all the revivals are wholesome. Smoking is in again? 13:26 Audie and Ari reveal their '90s touchstones and AOL screen names 17:20 Audie interviews comedian, writer and nostalgia culture creator Rob Anderson Watch 24/7 live news with CNN Headlines: https://bit.ly/4eIvlTr #News #culture #engagementparty",
+            "translated_summary": "The '90s are everywhere these days — clothes, music, TV — and brands are doing everything they can to capitalize on the revival. Audie and Ari explore what’s driving the modern fascination with a decade they lived through, what Gen Z's rose-colored glasses get wrong about the era, and what they wax nostalgic for (mix tapes!). Plus, comedian Rob Anderson joins Audie to discuss why nostalgia is so damn funny. Like what you heard? Sign up for our newsletter to catch up on the latest trends, obsessions and culture. Is there something in your feed you want Audie and Ari to talk about? Email us a video at engagementparty@cnn.com and we might feature you on the show. 00:00 Nostalgia for the '90s has gripped the culture. What's behind it? 0:40 Retailers are trying to cash in, and The Gap is at the top of that list 2:05 Are people nostalgic for the '90s, or are they just craving an analog life? 5:36 Even MAGA is on the '90s nostalgia train 7:02 Speaking of The Gap, they're not entirely nailing it — what's with the happy stripe mesh? 10:00 Ari does a trust fall and reveals his own '90s style 10:49 Not all the revivals are wholesome. Smoking is in again? 13:26 Audie and Ari reveal their '90s touchstones and AOL screen names 17:20 Audie interviews comedian, writer and nostalgia culture creator Rob Anderson Watch 24/7 live news with CNN Headlines: https://bit.ly/4eIvlTr #News #culture #engagementparty",
+            "tags": [
+                "YouTube"
+            ],
+            "podcast": {
+                "id": 12430,
+                "title": "CNN",
+                "host": "CNN",
+                "cover_url": "",
+                "source_url": "http://www.youtube.com/@CNN",
+                "channel_id": "UCupvZG-5ko_eiXAupbDfxWw"
+            },
+            "published_at": "2026-07-24T03:00:18-07:00",
+            "description": "The '90s are everywhere these days — clothes, music, TV — and brands are doing everything they can to capitalize on the revival. Audie and Ari explore what’s driving the modern fascination with a decade they lived through, what Gen Z's rose-colored glasses get wrong about the era, and what they wax nostalgic for (mix tapes!). Plus, comedian Rob Anderson joins Audie to discuss why nostalgia is so damn funny. Like what you heard? Sign up for our newsletter to catch up on the latest trends, obsessions and culture. Is there something in your feed you want Audie and Ari to talk about? Email us a video at engagementparty@cnn.com and we might feature you on the show. 00:00 Nostalgia for the '90s has gripped the culture. What's behind it? 0:40 Retailers are trying to cash in, and The Gap is at the top of that list 2:05 Are people nostalgic for the '90s, or are they just craving an analog life? 5:36 Even MAGA is on the '90s nostalgia train 7:02 Speaking of The Gap, they're not entirely nailing it — what's with the happy stripe mesh? 10:00 Ari does a trust fall and reveals his own '90s style 10:49 Not all the revivals are wholesome. Smoking is in again? 13:26 Audie and Ari reveal their '90s touchstones and AOL screen names 17:20 Audie interviews comedian, writer and nostalgia culture creator Rob Anderson Watch 24/7 live news with CNN Headlines: https://bit.ly/4eIvlTr #News #culture #engagementparty"
+        },
+        {
+            "id": 12412,
+            "video_id": "FiONhy5xx4Q",
+            "platform": "youtube",
+            "title": "We Tried EVERY Pudding By Snack Pack",
+            "url": "https://www.youtube.com/watch?v=FiONhy5xx4Q",
+            "thumbnail_url": "https://i.ytimg.com/vi/FiONhy5xx4Q/mqdefault.jpg",
+            "duration": "20:34",
+            "language": "",
+            "is_featured": false,
+            "summary": "Today we try all the different snack pack puddings. Make the switch to Chime® and get 3.75% APY on Savings: https://chime.yt.link/B28t9io Thanks Chime for sponsoring this video! Watch today's GMMORE: https://youtu.be/dE-1NdQl90g Subscribe and click the bell icon so you'll know when we add a new episode! Sign up for Mythical newsletters to stay up to date on all things Mythical and get 10% off your first order at the Mythical Store. Sign up now: https://Mythical.com/Newsletter Want more GMM? This Season - https://www.youtube.com/playlist?list=PLJ49NV73ttrtgkVVZyxzSf8i0zMxbVY3X Taste Tests - https://www.youtube.com/playlist?list=PLJ49NV73ttrsUefw67wH_pnEJ5KwJZ7lN Gut Check - https://www.youtube.com/playlist?list=PLJ49NV73ttrt60yAQUx-WoaQM3-MksNE3 Check Out Our Other Mythical Channels: Good Mythical MORE: https://youtube.com/goodmythicalmore Mythical Kitchen: https://youtube.com/mythicalkitchen Rhett & Link: https://youtube.com/rhettandlink Dispatches From Myrtle Beach: https://www.youtube.com/@DispatchesFromMyrtleBeach Join the Mythical Society: https://mythic.al/yt-msoc Pick up official GMM and Mythical merch at https://mythic.al/yt-store and https://www.amazon.com/mythical Submit your Wheel of Mythicality video here: https://mythic.al/GMMWheelVideo Tune in every Monday-Friday for a daily dose of fun and laughter. Watch two best friends eat truly unbelievable foods, explore surprising new products and trends, compete in original games with celebrity guests, try serious experiments in hilarious ways, and more. In the spirit of minimizing food waste associated with the filming of this series, Mythical is donating to the Hollywood Food Coalition who provide daily, nourishing meals to underserved communities in the Los Angeles area. Intro Motion Graphics by Fantoons https://www.fantoons.shop/ Chime is a fintech, not a bank. Banking services and Chime Card provided by Chime’s bank partners. Savings APY: No min. balance required. For more information on Annual Percentage Yields, go to chime.com/disclosures. For information on Automatic Savings, please see chime.com/disclosures. GMM #3084",
+            "translated_summary": "Today we try all the different snack pack puddings. Make the switch to Chime® and get 3.75% APY on Savings: https://chime.yt.link/B28t9io Thanks Chime for sponsoring this video! Watch today's GMMORE: https://youtu.be/dE-1NdQl90g Subscribe and click the bell icon so you'll know when we add a new episode! Sign up for Mythical newsletters to stay up to date on all things Mythical and get 10% off your first order at the Mythical Store. Sign up now: https://Mythical.com/Newsletter Want more GMM? This Season - https://www.youtube.com/playlist?list=PLJ49NV73ttrtgkVVZyxzSf8i0zMxbVY3X Taste Tests - https://www.youtube.com/playlist?list=PLJ49NV73ttrsUefw67wH_pnEJ5KwJZ7lN Gut Check - https://www.youtube.com/playlist?list=PLJ49NV73ttrt60yAQUx-WoaQM3-MksNE3 Check Out Our Other Mythical Channels: Good Mythical MORE: https://youtube.com/goodmythicalmore Mythical Kitchen: https://youtube.com/mythicalkitchen Rhett & Link: https://youtube.com/rhettandlink Dispatches From Myrtle Beach: https://www.youtube.com/@DispatchesFromMyrtleBeach Join the Mythical Society: https://mythic.al/yt-msoc Pick up official GMM and Mythical merch at https://mythic.al/yt-store and https://www.amazon.com/mythical Submit your Wheel of Mythicality video here: https://mythic.al/GMMWheelVideo Tune in every Monday-Friday for a daily dose of fun and laughter. Watch two best friends eat truly unbelievable foods, explore surprising new products and trends, compete in original games with celebrity guests, try serious experiments in hilarious ways, and more. In the spirit of minimizing food waste associated with the filming of this series, Mythical is donating to the Hollywood Food Coalition who provide daily, nourishing meals to underserved communities in the Los Angeles area. Intro Motion Graphics by Fantoons https://www.fantoons.shop/ Chime is a fintech, not a bank. Banking services and Chime Card provided by Chime’s bank partners. Savings APY: No min. balance required. For more information on Annual Percentage Yields, go to chime.com/disclosures. For information on Automatic Savings, please see chime.com/disclosures. GMM #3084",
+            "tags": [
+                "YouTube"
+            ],
+            "podcast": {
+                "id": 12412,
+                "title": "Good Mythical Morning",
+                "host": "Good Mythical Morning",
+                "cover_url": "",
+                "source_url": "http://www.youtube.com/@GoodMythicalMorning",
+                "channel_id": "UC4PooiX37Pld1T8J5SYT-SQ"
+            },
+            "published_at": "2026-07-24T03:00:07-07:00",
+            "description": "Today we try all the different snack pack puddings. Make the switch to Chime® and get 3.75% APY on Savings: https://chime.yt.link/B28t9io Thanks Chime for sponsoring this video! Watch today's GMMORE: https://youtu.be/dE-1NdQl90g Subscribe and click the bell icon so you'll know when we add a new episode! Sign up for Mythical newsletters to stay up to date on all things Mythical and get 10% off your first order at the Mythical Store. Sign up now: https://Mythical.com/Newsletter Want more GMM? This Season - https://www.youtube.com/playlist?list=PLJ49NV73ttrtgkVVZyxzSf8i0zMxbVY3X Taste Tests - https://www.youtube.com/playlist?list=PLJ49NV73ttrsUefw67wH_pnEJ5KwJZ7lN Gut Check - https://www.youtube.com/playlist?list=PLJ49NV73ttrt60yAQUx-WoaQM3-MksNE3 Check Out Our Other Mythical Channels: Good Mythical MORE: https://youtube.com/goodmythicalmore Mythical Kitchen: https://youtube.com/mythicalkitchen Rhett & Link: https://youtube.com/rhettandlink Dispatches From Myrtle Beach: https://www.youtube.com/@DispatchesFromMyrtleBeach Join the Mythical Society: https://mythic.al/yt-msoc Pick up official GMM and Mythical merch at https://mythic.al/yt-store and https://www.amazon.com/mythical Submit your Wheel of Mythicality video here: https://mythic.al/GMMWheelVideo Tune in every Monday-Friday for a daily dose of fun and laughter. Watch two best friends eat truly unbelievable foods, explore surprising new products and trends, compete in original games with celebrity guests, try serious experiments in hilarious ways, and more. In the spirit of minimizing food waste associated with the filming of this series, Mythical is donating to the Hollywood Food Coalition who provide daily, nourishing meals to underserved communities in the Los Angeles area. Intro Motion Graphics by Fantoons https://www.fantoons.shop/ Chime is a fintech, not a bank. Banking services and Chime Card provided by Chime’s bank partners. Savings APY: No min. balance required. For more information on Annual Percentage Yields, go to chime.com/disclosures. For information on Automatic Savings, please see chime.com/disclosures. GMM #3084"
+        },
+        {
+            "id": 12389,
+            "video_id": "R-hDhmGFt6U",
+            "platform": "youtube",
+            "title": "An electrifying evening is about to begin!⚡ It's #DCRave Day! 🔊 #DC! ♥️| Sun Pictures",
+            "url": "https://www.youtube.com/watch?v=R-hDhmGFt6U",
+            "thumbnail_url": "https://i.ytimg.com/vi/R-hDhmGFt6U/mqdefault.jpg",
+            "duration": "0:28",
+            "language": "",
+            "is_featured": false,
+            "summary": "An electrifying evening is about to begin!⚡ It's #DCRave Day! 🔊 #DC! ♥️| Sun Pictures Get ready to experience a musical phenomenon as 15 unforgettable tracks come together to create one epic musical storm! 🌪️🎵 #DC #DCRave #SunPictures #Anirudh #LokeshKanagaraj #TamilMusic #FullAlbum #MusicalStorm #July24 #SunPictures Watch the latest video that airs on Sun TV. Don't forget to SUBSCRIBE to the Sun TV YouTube 👉 http://bit.ly/suntvsubscribe --------------------------------------------------------- Watch more: Movie Clips on SUN NXT - https://bit.ly/3gc1dPI Music & Shows from Sun Music - http://bit.ly/2YS5eBi Comedy Shows from AdithyaTV - http://bit.ly/2K6VaiZ --------------------------------------------------------- SUN NXT: Watch the latest movies in DOLBY VISION, 4000+ Movies in HD, 30+ Live TV Channels, TV Shows, TV Serials & Digital Exclusives on SUN NXT anywhere anytime. Download SUN NXT here: Android: http://bit.ly/SunNxtAdroid iOS: India - http://bit.ly/sunNXT iOS Rest of the World - http://bit.ly/ussunnxt Watch on the web - https://www.sunnxt.com/ --------------------------------------------------------- Follow us on Social Media: Twitter: https://twitter.com/SunTV Instagram: https://www.instagram.com/suntv Facebook: https://www.facebook.com/SunTV --------------------------------------------------------- #SuntvSerial #TamilSerialPromo #SunTVshows #NewTamilSerials #SunTV #SunTVserials #SunTVProgram #SunNXT #LatestTamilSerials #SuntvSerialPromo #SuntvSerialEpisodes #SunTVpromos #TamilSerialPromos #TamilTVserials #TamilSerialEpisodes #Suntv #tamilserials #tamilserial #newtamilserial #serialfullepisodes #suntvserialepisodes #serialhighlights #tamilserialhighlights #serialbestscene #tamilserialbestscene #suntvserialbestscene #suntvserialhighlights ---------------------------------------------------------",
+            "translated_summary": "An electrifying evening is about to begin!⚡ It's #DCRave Day! 🔊 #DC! ♥️| Sun Pictures Get ready to experience a musical phenomenon as 15 unforgettable tracks come together to create one epic musical storm! 🌪️🎵 #DC #DCRave #SunPictures #Anirudh #LokeshKanagaraj #TamilMusic #FullAlbum #MusicalStorm #July24 #SunPictures Watch the latest video that airs on Sun TV. Don't forget to SUBSCRIBE to the Sun TV YouTube 👉 http://bit.ly/suntvsubscribe --------------------------------------------------------- Watch more: Movie Clips on SUN NXT - https://bit.ly/3gc1dPI Music & Shows from Sun Music - http://bit.ly/2YS5eBi Comedy Shows from AdithyaTV - http://bit.ly/2K6VaiZ --------------------------------------------------------- SUN NXT: Watch the latest movies in DOLBY VISION, 4000+ Movies in HD, 30+ Live TV Channels, TV Shows, TV Serials & Digital Exclusives on SUN NXT anywhere anytime. Download SUN NXT here: Android: http://bit.ly/SunNxtAdroid iOS: India - http://bit.ly/sunNXT iOS Rest of the World - http://bit.ly/ussunnxt Watch on the web - https://www.sunnxt.com/ --------------------------------------------------------- Follow us on Social Media: Twitter: https://twitter.com/SunTV Instagram: https://www.instagram.com/suntv Facebook: https://www.facebook.com/SunTV --------------------------------------------------------- #SuntvSerial #TamilSerialPromo #SunTVshows #NewTamilSerials #SunTV #SunTVserials #SunTVProgram #SunNXT #LatestTamilSerials #SuntvSerialPromo #SuntvSerialEpisodes #SunTVpromos #TamilSerialPromos #TamilTVserials #TamilSerialEpisodes #Suntv #tamilserials #tamilserial #newtamilserial #serialfullepisodes #suntvserialepisodes #serialhighlights #tamilserialhighlights #serialbestscene #tamilserialbestscene #suntvserialbestscene #suntvserialhighlights ---------------------------------------------------------",
+            "tags": [
+                "YouTube"
+            ],
+            "podcast": {
+                "id": 12389,
+                "title": "Sun TV",
+                "host": "Sun TV",
+                "cover_url": "",
+                "source_url": "http://www.youtube.com/@suntv",
+                "channel_id": "UCBnxEdpoZwstJqC1yZpOjRA"
+            },
+            "published_at": "2026-07-24T02:26:28-07:00",
+            "description": "An electrifying evening is about to begin!⚡ It's #DCRave Day! 🔊 #DC! ♥️| Sun Pictures Get ready to experience a musical phenomenon as 15 unforgettable tracks come together to create one epic musical storm! 🌪️🎵 #DC #DCRave #SunPictures #Anirudh #LokeshKanagaraj #TamilMusic #FullAlbum #MusicalStorm #July24 #SunPictures Watch the latest video that airs on Sun TV. Don't forget to SUBSCRIBE to the Sun TV YouTube 👉 http://bit.ly/suntvsubscribe --------------------------------------------------------- Watch more: Movie Clips on SUN NXT - https://bit.ly/3gc1dPI Music & Shows from Sun Music - http://bit.ly/2YS5eBi Comedy Shows from AdithyaTV - http://bit.ly/2K6VaiZ --------------------------------------------------------- SUN NXT: Watch the latest movies in DOLBY VISION, 4000+ Movies in HD, 30+ Live TV Channels, TV Shows, TV Serials & Digital Exclusives on SUN NXT anywhere anytime. Download SUN NXT here: Android: http://bit.ly/SunNxtAdroid iOS: India - http://bit.ly/sunNXT iOS Rest of the World - http://bit.ly/ussunnxt Watch on the web - https://www.sunnxt.com/ --------------------------------------------------------- Follow us on Social Media: Twitter: https://twitter.com/SunTV Instagram: https://www.instagram.com/suntv Facebook: https://www.facebook.com/SunTV --------------------------------------------------------- #SuntvSerial #TamilSerialPromo #SunTVshows #NewTamilSerials #SunTV #SunTVserials #SunTVProgram #SunNXT #LatestTamilSerials #SuntvSerialPromo #SuntvSerialEpisodes #SunTVpromos #TamilSerialPromos #TamilTVserials #TamilSerialEpisodes #Suntv #tamilserials #tamilserial #newtamilserial #serialfullepisodes #suntvserialepisodes #serialhighlights #tamilserialhighlights #serialbestscene #tamilserialbestscene #suntvserialbestscene #suntvserialhighlights ---------------------------------------------------------"
+        },
+        {
+            "id": 12388,
+            "video_id": "PB7DBemxl3E",
+            "platform": "youtube",
+            "title": "Building at the pace of AI innovation | Grant Lee, Gamma",
+            "url": "https://www.youtube.com/watch?v=PB7DBemxl3E",
+            "thumbnail_url": "https://i.ytimg.com/vi/PB7DBemxl3E/mqdefault.jpg",
+            "duration": "1:31",
+            "language": "",
+            "is_featured": false,
+            "summary": "We caught up with Grant Lee, Founder and CEO of Gamma, at RAISE Summit in Paris to discuss what it takes to build at the pace of AI innovation. As AI capabilities continue to evolve, the companies that move fastest are those that can quickly turn new breakthroughs into better products and better customer experiences. Grant shares how Gamma uses OpenAI across its platform and internal engineering workflows, why strong partnerships have been key to its growth, and why adaptability has become one of the most important advantages for businesses navigating rapid technological change.",
+            "translated_summary": "We caught up with Grant Lee, Founder and CEO of Gamma, at RAISE Summit in Paris to discuss what it takes to build at the pace of AI innovation. As AI capabilities continue to evolve, the companies that move fastest are those that can quickly turn new breakthroughs into better products and better customer experiences. Grant shares how Gamma uses OpenAI across its platform and internal engineering workflows, why strong partnerships have been key to its growth, and why adaptability has become one of the most important advantages for businesses navigating rapid technological change.",
+            "tags": [
+                "YouTube"
+            ],
+            "podcast": {
+                "id": 12388,
+                "title": "OpenAI",
+                "host": "OpenAI",
+                "cover_url": "",
+                "source_url": "http://www.youtube.com/@OpenAI",
+                "channel_id": "UCXZCJLdBC09xxGZ6gcdrc6A"
+            },
+            "published_at": "2026-07-24T02:12:21-07:00",
+            "description": "We caught up with Grant Lee, Founder and CEO of Gamma, at RAISE Summit in Paris to discuss what it takes to build at the pace of AI innovation. As AI capabilities continue to evolve, the companies that move fastest are those that can quickly turn new breakthroughs into better products and better customer experiences. Grant shares how Gamma uses OpenAI across its platform and internal engineering workflows, why strong partnerships have been key to its growth, and why adaptability has become one of the most important advantages for businesses navigating rapid technological change."
+        },
+        {
+            "id": 12359,
+            "video_id": "YUPn_nVkF4o",
+            "platform": "youtube",
+            "title": "Magpakailanman: Mga batang biktima ng karahasan! (Full Episode)",
+            "url": "https://www.youtube.com/watch?v=YUPn_nVkF4o",
+            "thumbnail_url": "https://i.ytimg.com/vi/YUPn_nVkF4o/mqdefault.jpg",
+            "duration": "1:01:27",
+            "language": "",
+            "is_featured": false,
+            "summary": "Since their family is in dire need of money to suffice all of their needs, Baron (Allan Paule) and Celia (Glydel Mercado) were left with no choice but to lure their own daughter Trina (Klea Pineda) into the world of cyberporn to earn money. Selling their daughter's dignity online to the prying eyes of foreigners, Trina awakens to a job that will haunt her for life. -------------- Stay updated with the latest episodes of your favorite Kapuso shows online on GMA Network's official YouTube channel! Kapuso Stream is your newest digital buddy, offering the first continuous live streaming service by GMA Network, just a few clicks away. Catch all your favorite Kapuso shows from the morning, Afternoon Prime, and Prime. Subscribe now to GMA Network’s official YouTube channel and never miss a single episode of your must-watch teleserye, variety shows, and news program by clicking the notification bell button. #GMANetwork #KapusoStream Visit the GMA Network Portal! http://www.gmanetwork.com For more of your favorite Pinoy shows, watch GMA Pinoy TV, GMA Life TV, and GMA News TV, now available on YouTube TV! Subscribe now for only $14.99 per month. Visit tv.youtube.com for more details. Connect with us on: Facebook: http://www.facebook.com/GMANetwork Twitter: https://twitter.com/GMANetwork Instagram: http://instagram.com/GMANetwork",
+            "translated_summary": "Since their family is in dire need of money to suffice all of their needs, Baron (Allan Paule) and Celia (Glydel Mercado) were left with no choice but to lure their own daughter Trina (Klea Pineda) into the world of cyberporn to earn money. Selling their daughter's dignity online to the prying eyes of foreigners, Trina awakens to a job that will haunt her for life. -------------- Stay updated with the latest episodes of your favorite Kapuso shows online on GMA Network's official YouTube channel! Kapuso Stream is your newest digital buddy, offering the first continuous live streaming service by GMA Network, just a few clicks away. Catch all your favorite Kapuso shows from the morning, Afternoon Prime, and Prime. Subscribe now to GMA Network’s official YouTube channel and never miss a single episode of your must-watch teleserye, variety shows, and news program by clicking the notification bell button. #GMANetwork #KapusoStream Visit the GMA Network Portal! http://www.gmanetwork.com For more of your favorite Pinoy shows, watch GMA Pinoy TV, GMA Life TV, and GMA News TV, now available on YouTube TV! Subscribe now for only $14.99 per month. Visit tv.youtube.com for more details. Connect with us on: Facebook: http://www.facebook.com/GMANetwork Twitter: https://twitter.com/GMANetwork Instagram: http://instagram.com/GMANetwork",
+            "tags": [
+                "YouTube"
+            ],
+            "podcast": {
+                "id": 12359,
+                "title": "GMA Network",
+                "host": "GMA Network",
+                "cover_url": "",
+                "source_url": "http://www.youtube.com/@gmanetwork",
+                "channel_id": "UCKL5hAuzgFQsyrsQKgU0Qng"
+            },
+            "published_at": "2026-07-24T02:00:06-07:00",
+            "description": "Since their family is in dire need of money to suffice all of their needs, Baron (Allan Paule) and Celia (Glydel Mercado) were left with no choice but to lure their own daughter Trina (Klea Pineda) into the world of cyberporn to earn money. Selling their daughter's dignity online to the prying eyes of foreigners, Trina awakens to a job that will haunt her for life. -------------- Stay updated with the latest episodes of your favorite Kapuso shows online on GMA Network's official YouTube channel! Kapuso Stream is your newest digital buddy, offering the first continuous live streaming service by GMA Network, just a few clicks away. Catch all your favorite Kapuso shows from the morning, Afternoon Prime, and Prime. Subscribe now to GMA Network’s official YouTube channel and never miss a single episode of your must-watch teleserye, variety shows, and news program by clicking the notification bell button. #GMANetwork #KapusoStream Visit the GMA Network Portal! http://www.gmanetwork.com For more of your favorite Pinoy shows, watch GMA Pinoy TV, GMA Life TV, and GMA News TV, now available on YouTube TV! Subscribe now for only $14.99 per month. Visit tv.youtube.com for more details. Connect with us on: Facebook: http://www.facebook.com/GMANetwork Twitter: https://twitter.com/GMANetwork Instagram: http://instagram.com/GMANetwork"
+        },
+        {
+            "id": 12358,
+            "video_id": "qTy_I7Q1mNc",
+            "platform": "youtube",
+            "title": "Born To Shine: Sikreto nina Jeni at Megan, MABUBUNYAG NA! (Full Episode 104) July 24, 2026",
+            "url": "https://www.youtube.com/watch?v=qTy_I7Q1mNc",
+            "thumbnail_url": "https://i.ytimg.com/vi/qTy_I7Q1mNc/mqdefault.jpg",
+            "duration": "27:26",
+            "language": "",
+            "is_featured": false,
+            "summary": "Aired (July 24, 2026): Binunyag ni Chika Nene (Inah Evans) sa kalagitnaan ng birthday party ni Jeni (Zephanie) na sila ay magkapatid ni Megan (Olive May). #GMANetwork #GMADrama #Kapuso -------------- Stay updated with the latest episodes of your favorite Kapuso shows online on GMA Network's official YouTube channel! Kapuso Stream is your newest digital buddy, offering the first continuous live streaming service by GMA Network, just a few clicks away. Catch all your favorite Kapuso shows from the morning, Afternoon Prime, and Prime. Subscribe now to GMA Network’s official YouTube channel and never miss a single episode of your must-watch teleserye, variety shows, and news program by clicking the notification bell button. #GMANetwork #KapusoStream Visit the GMA Network Portal! http://www.gmanetwork.com For more of your favorite Pinoy shows, watch GMA Pinoy TV, GMA Life TV, and GMA News TV, now available on YouTube TV! Subscribe now for only $14.99 per month. Visit tv.youtube.com for more details. Connect with us on: Facebook: http://www.facebook.com/GMANetwork Twitter: https://twitter.com/GMANetwork Instagram: http://instagram.com/GMANetwork",
+            "translated_summary": "Aired (July 24, 2026): Binunyag ni Chika Nene (Inah Evans) sa kalagitnaan ng birthday party ni Jeni (Zephanie) na sila ay magkapatid ni Megan (Olive May). #GMANetwork #GMADrama #Kapuso -------------- Stay updated with the latest episodes of your favorite Kapuso shows online on GMA Network's official YouTube channel! Kapuso Stream is your newest digital buddy, offering the first continuous live streaming service by GMA Network, just a few clicks away. Catch all your favorite Kapuso shows from the morning, Afternoon Prime, and Prime. Subscribe now to GMA Network’s official YouTube channel and never miss a single episode of your must-watch teleserye, variety shows, and news program by clicking the notification bell button. #GMANetwork #KapusoStream Visit the GMA Network Portal! http://www.gmanetwork.com For more of your favorite Pinoy shows, watch GMA Pinoy TV, GMA Life TV, and GMA News TV, now available on YouTube TV! Subscribe now for only $14.99 per month. Visit tv.youtube.com for more details. Connect with us on: Facebook: http://www.facebook.com/GMANetwork Twitter: https://twitter.com/GMANetwork Instagram: http://instagram.com/GMANetwork",
+            "tags": [
+                "YouTube"
+            ],
+            "podcast": {
+                "id": 12358,
+                "title": "GMA Network",
+                "host": "GMA Network",
+                "cover_url": "",
+                "source_url": "http://www.youtube.com/@gmanetwork",
+                "channel_id": "UCKL5hAuzgFQsyrsQKgU0Qng"
+            },
+            "published_at": "2026-07-24T02:00:06-07:00",
+            "description": "Aired (July 24, 2026): Binunyag ni Chika Nene (Inah Evans) sa kalagitnaan ng birthday party ni Jeni (Zephanie) na sila ay magkapatid ni Megan (Olive May). #GMANetwork #GMADrama #Kapuso -------------- Stay updated with the latest episodes of your favorite Kapuso shows online on GMA Network's official YouTube channel! Kapuso Stream is your newest digital buddy, offering the first continuous live streaming service by GMA Network, just a few clicks away. Catch all your favorite Kapuso shows from the morning, Afternoon Prime, and Prime. Subscribe now to GMA Network’s official YouTube channel and never miss a single episode of your must-watch teleserye, variety shows, and news program by clicking the notification bell button. #GMANetwork #KapusoStream Visit the GMA Network Portal! http://www.gmanetwork.com For more of your favorite Pinoy shows, watch GMA Pinoy TV, GMA Life TV, and GMA News TV, now available on YouTube TV! Subscribe now for only $14.99 per month. Visit tv.youtube.com for more details. Connect with us on: Facebook: http://www.facebook.com/GMANetwork Twitter: https://twitter.com/GMANetwork Instagram: http://instagram.com/GMANetwork"
+        },
+        {
+            "id": 12381,
+            "video_id": "8BbeT171y4Q",
+            "platform": "youtube",
+            "title": "LE SSERAFIM (르세라핌) 'BOOMPALA (feat. Ayra Starr)' Official Visualizer",
+            "url": "https://www.youtube.com/watch?v=8BbeT171y4Q",
+            "thumbnail_url": "https://i.ytimg.com/vi/8BbeT171y4Q/mqdefault.jpg",
+            "duration": "2:57",
+            "language": "",
+            "is_featured": false,
+            "summary": "LE SSERAFIM (르세라핌) 'BOOMPALA (feat. Ayra Starr)' Official Visualizer 💿 https://le-sserafim.lnk.to/PUREFLOWpt1 Creative Directing : Gabriel Cho Visual Creative Lead : Yoon Cho Style Directing : Hye Lin Im, Jisun Ha Content Production : Chansol Bok, Kyuri Park Brand Experience Design : Yoovin Baek, Hyemin Yoo, Myungryol Shin, Seongwon Park, Junghee Hong A&R : Jerry Kim, Sewon Kim, Yunjae Kim Creative Strategy: Jong Ha Lee, Sekyeong Park, Jisu Shin Production : GETLASEK Visual Artist : Joonyoung Kang Connect with LE SSERAFIM: OFFICIAL INSTAGRAM https://www.instagram.com/le_sserafim/ OFFICIAL X (TWITTER) https://x.com/le_sserafim OFFICIAL JAPAN X (TWITTER) https://x.com/le_sserafim_jp OFFICIAL FACEBOOK https://www.facebook.com/official.lesserafim/ OFFICIAL WEVERSE https://weverse.io/lesserafim OFFICIAL TIKTOK https://www.tiktok.com/@le_sserafim OFFICIAL WEIBO https://weibo.com/LESSERAFIM OFFICIAL BILIBILI https://space.bilibili.com/627577002 OFFICIAL DOUYIN https://v.douyin.com/iJgLJpUp/ OFFICIAL SOUNDCLOUD https://soundcloud.com/le_sserafim_official SOURCE MUSIC. Rights are reserved selectively in the video. Unauthorized reproduction is a violation of applicable laws. Manufactured by SOURCE MUSIC, Seoul, Korea #LE_SSERAFIM #르세라핌 #PUREFLOW_pt1 #BOOMPALA",
+            "translated_summary": "LE SSERAFIM (르세라핌) 'BOOMPALA (feat. Ayra Starr)' Official Visualizer 💿 https://le-sserafim.lnk.to/PUREFLOWpt1 Creative Directing : Gabriel Cho Visual Creative Lead : Yoon Cho Style Directing : Hye Lin Im, Jisun Ha Content Production : Chansol Bok, Kyuri Park Brand Experience Design : Yoovin Baek, Hyemin Yoo, Myungryol Shin, Seongwon Park, Junghee Hong A&R : Jerry Kim, Sewon Kim, Yunjae Kim Creative Strategy: Jong Ha Lee, Sekyeong Park, Jisu Shin Production : GETLASEK Visual Artist : Joonyoung Kang Connect with LE SSERAFIM: OFFICIAL INSTAGRAM https://www.instagram.com/le_sserafim/ OFFICIAL X (TWITTER) https://x.com/le_sserafim OFFICIAL JAPAN X (TWITTER) https://x.com/le_sserafim_jp OFFICIAL FACEBOOK https://www.facebook.com/official.lesserafim/ OFFICIAL WEVERSE https://weverse.io/lesserafim OFFICIAL TIKTOK https://www.tiktok.com/@le_sserafim OFFICIAL WEIBO https://weibo.com/LESSERAFIM OFFICIAL BILIBILI https://space.bilibili.com/627577002 OFFICIAL DOUYIN https://v.douyin.com/iJgLJpUp/ OFFICIAL SOUNDCLOUD https://soundcloud.com/le_sserafim_official SOURCE MUSIC. Rights are reserved selectively in the video. Unauthorized reproduction is a violation of applicable laws. Manufactured by SOURCE MUSIC, Seoul, Korea #LE_SSERAFIM #르세라핌 #PUREFLOW_pt1 #BOOMPALA",
+            "tags": [
+                "YouTube"
+            ],
+            "podcast": {
+                "id": 12381,
+                "title": "HYBE LABELS",
+                "host": "HYBE LABELS",
+                "cover_url": "",
+                "source_url": "http://www.youtube.com/@HYBELABELS",
+                "channel_id": "UC3IZKseVpdzPSBaWxBxundA"
+            },
+            "published_at": "2026-07-24T02:00:01-07:00",
+            "description": "LE SSERAFIM (르세라핌) 'BOOMPALA (feat. Ayra Starr)' Official Visualizer 💿 https://le-sserafim.lnk.to/PUREFLOWpt1 Creative Directing : Gabriel Cho Visual Creative Lead : Yoon Cho Style Directing : Hye Lin Im, Jisun Ha Content Production : Chansol Bok, Kyuri Park Brand Experience Design : Yoovin Baek, Hyemin Yoo, Myungryol Shin, Seongwon Park, Junghee Hong A&R : Jerry Kim, Sewon Kim, Yunjae Kim Creative Strategy: Jong Ha Lee, Sekyeong Park, Jisu Shin Production : GETLASEK Visual Artist : Joonyoung Kang Connect with LE SSERAFIM: OFFICIAL INSTAGRAM https://www.instagram.com/le_sserafim/ OFFICIAL X (TWITTER) https://x.com/le_sserafim OFFICIAL JAPAN X (TWITTER) https://x.com/le_sserafim_jp OFFICIAL FACEBOOK https://www.facebook.com/official.lesserafim/ OFFICIAL WEVERSE https://weverse.io/lesserafim OFFICIAL TIKTOK https://www.tiktok.com/@le_sserafim OFFICIAL WEIBO https://weibo.com/LESSERAFIM OFFICIAL BILIBILI https://space.bilibili.com/627577002 OFFICIAL DOUYIN https://v.douyin.com/iJgLJpUp/ OFFICIAL SOUNDCLOUD https://soundcloud.com/le_sserafim_official SOURCE MUSIC. Rights are reserved selectively in the video. Unauthorized reproduction is a violation of applicable laws. Manufactured by SOURCE MUSIC, Seoul, Korea #LE_SSERAFIM #르세라핌 #PUREFLOW_pt1 #BOOMPALA"
+        },
+        {
+            "id": 12360,
+            "video_id": "8FQ9WbRPdY8",
+            "platform": "youtube",
+            "title": "Born To Shine: Jeni and Megan’s secret is out! (Episode 104)",
+            "url": "https://www.youtube.com/watch?v=8FQ9WbRPdY8",
+            "thumbnail_url": "https://i.ytimg.com/vi/8FQ9WbRPdY8/mqdefault.jpg",
+            "duration": "5:09",
+            "language": "",
+            "is_featured": false,
+            "summary": "Aired (July 24, 2026): Ibinulgar ni Chika Nene (Inah Evans) sa lahat na magkapatid sina Jeni (Zephanie) at Megan (Olive May). -------------- Subscribe to the GMA Network channel! - http://goo.gl/oYE4Dn Watch the latest episodes of your favorite GMA shows #WithMe. Stay #AtHome and subscribe to GMA Network's official YouTube channel and click the bell button to catch the latest videos. Visit the GMA Network Portal! http://www.gmanetwork.com For our Kapuso abroad, you can watch the latest episodes on GMA Pinoy TV! For more information, visit http://www.gmapinoytv.com Connect with us on: Facebook: http://www.facebook.com/GMANetwork Twitter: https://twitter.com/GMANetwork Instagram: http://instagram.com/GMANetwork",
+            "translated_summary": "Aired (July 24, 2026): Ibinulgar ni Chika Nene (Inah Evans) sa lahat na magkapatid sina Jeni (Zephanie) at Megan (Olive May). -------------- Subscribe to the GMA Network channel! - http://goo.gl/oYE4Dn Watch the latest episodes of your favorite GMA shows #WithMe. Stay #AtHome and subscribe to GMA Network's official YouTube channel and click the bell button to catch the latest videos. Visit the GMA Network Portal! http://www.gmanetwork.com For our Kapuso abroad, you can watch the latest episodes on GMA Pinoy TV! For more information, visit http://www.gmapinoytv.com Connect with us on: Facebook: http://www.facebook.com/GMANetwork Twitter: https://twitter.com/GMANetwork Instagram: http://instagram.com/GMANetwork",
+            "tags": [
+                "YouTube"
+            ],
+            "podcast": {
+                "id": 12360,
+                "title": "GMA Network",
+                "host": "GMA Network",
+                "cover_url": "",
+                "source_url": "http://www.youtube.com/@gmanetwork",
+                "channel_id": "UCKL5hAuzgFQsyrsQKgU0Qng"
+            },
+            "published_at": "2026-07-24T01:45:06-07:00",
+            "description": "Aired (July 24, 2026): Ibinulgar ni Chika Nene (Inah Evans) sa lahat na magkapatid sina Jeni (Zephanie) at Megan (Olive May). -------------- Subscribe to the GMA Network channel! - http://goo.gl/oYE4Dn Watch the latest episodes of your favorite GMA shows #WithMe. Stay #AtHome and subscribe to GMA Network's official YouTube channel and click the bell button to catch the latest videos. Visit the GMA Network Portal! http://www.gmanetwork.com For our Kapuso abroad, you can watch the latest episodes on GMA Pinoy TV! For more information, visit http://www.gmapinoytv.com Connect with us on: Facebook: http://www.facebook.com/GMANetwork Twitter: https://twitter.com/GMANetwork Instagram: http://instagram.com/GMANetwork"
+        },
+        {
+            "id": 12414,
+            "video_id": "y84USJTIlsU",
+            "platform": "youtube",
+            "title": "Suspects in alleged boy band murder plot in court",
+            "url": "https://www.youtube.com/watch?v=y84USJTIlsU",
+            "thumbnail_url": "https://i.ytimg.com/vi/y84USJTIlsU/mqdefault.jpg",
+            "duration": "8:31",
+            "language": "",
+            "is_featured": false,
+            "summary": "A popular influencer, her father and ex-boyfriend appear in court together for the first time in connection with an alleged plot to kill “Why Don’t We” band member Jack Avery. Subscribe to ABC News on YouTube: https://abcnews.visitlink.me/59aJ1G ABC News Digital is your daily source of breaking national and world news, exclusive interviews and 24/7 live streaming coverage. Download the ABC News app for the latest headlines and alerts: https://abcnews.go.com/devices Watch 24/7 coverage of breaking news and live events on ABC News Live: https://www.youtube.com/watch?v=gN0PZCe-kwQ&ab_channel=ABCNews Watch full episodes of World News Tonight with David Muir here: https://youtube.com/playlist?list=PLQOa26lW-uI8ixlVw1NWu_l4Eh8iZW_qN&feature=shared Read ABC News reports online: http://abcnews.go.com ABC News is the home to the #1 evening newscast “World News Tonight” with David Muir, “Good Morning America,” “20/20,” “Nightline,” “This Week” with George Stephanopoulos, “ABC News Live Prime” with Linsey Davis, plus the daily news podcast “Start Here.” Connect with ABC News on social media: Facebook: https://www.facebook.com/ABCNews Instagram: https://www.instagram.com/abcnews TikTok: https://www.tiktok.com/@abcnews X: https://twitter.com/ABC Threads: https://www.threads.net/@abcnews WhatsApp: https://whatsapp.com/channel/0029VajTNakKWEKkXoAPIR11 LinkedIn: https://www.linkedin.com/company/abcnews",
+            "translated_summary": "A popular influencer, her father and ex-boyfriend appear in court together for the first time in connection with an alleged plot to kill “Why Don’t We” band member Jack Avery. Subscribe to ABC News on YouTube: https://abcnews.visitlink.me/59aJ1G ABC News Digital is your daily source of breaking national and world news, exclusive interviews and 24/7 live streaming coverage. Download the ABC News app for the latest headlines and alerts: https://abcnews.go.com/devices Watch 24/7 coverage of breaking news and live events on ABC News Live: https://www.youtube.com/watch?v=gN0PZCe-kwQ&ab_channel=ABCNews Watch full episodes of World News Tonight with David Muir here: https://youtube.com/playlist?list=PLQOa26lW-uI8ixlVw1NWu_l4Eh8iZW_qN&feature=shared Read ABC News reports online: http://abcnews.go.com ABC News is the home to the #1 evening newscast “World News Tonight” with David Muir, “Good Morning America,” “20/20,” “Nightline,” “This Week” with George Stephanopoulos, “ABC News Live Prime” with Linsey Davis, plus the daily news podcast “Start Here.” Connect with ABC News on social media: Facebook: https://www.facebook.com/ABCNews Instagram: https://www.instagram.com/abcnews TikTok: https://www.tiktok.com/@abcnews X: https://twitter.com/ABC Threads: https://www.threads.net/@abcnews WhatsApp: https://whatsapp.com/channel/0029VajTNakKWEKkXoAPIR11 LinkedIn: https://www.linkedin.com/company/abcnews",
+            "tags": [
+                "YouTube"
+            ],
+            "podcast": {
+                "id": 12414,
+                "title": "ABC News",
+                "host": "ABC News",
+                "cover_url": "https://yt3.googleusercontent.com/GJ8V0NX6NddGh9bf4zED4tsjPjjBK2hdp5FWHMy09pV7sdSkkE3yEhCRSch4waEb9ZavyUrWfw=s900-c-k-c0x00ffffff-no-rj",
+                "source_url": "http://www.youtube.com/@ABCNews",
+                "channel_id": "UCBi2mrWuNuyYy4gbM6fU18Q"
+            },
+            "published_at": "2026-07-24T01:30:11-07:00",
+            "description": "A popular influencer, her father and ex-boyfriend appear in court together for the first time in connection with an alleged plot to kill “Why Don’t We” band member Jack Avery. Subscribe to ABC News on YouTube: https://abcnews.visitlink.me/59aJ1G ABC News Digital is your daily source of breaking national and world news, exclusive interviews and 24/7 live streaming coverage. Download the ABC News app for the latest headlines and alerts: https://abcnews.go.com/devices Watch 24/7 coverage of breaking news and live events on ABC News Live: https://www.youtube.com/watch?v=gN0PZCe-kwQ&ab_channel=ABCNews Watch full episodes of World News Tonight with David Muir here: https://youtube.com/playlist?list=PLQOa26lW-uI8ixlVw1NWu_l4Eh8iZW_qN&feature=shared Read ABC News reports online: http://abcnews.go.com ABC News is the home to the #1 evening newscast “World News Tonight” with David Muir, “Good Morning America,” “20/20,” “Nightline,” “This Week” with George Stephanopoulos, “ABC News Live Prime” with Linsey Davis, plus the daily news podcast “Start Here.” Connect with ABC News on social media: Facebook: https://www.facebook.com/ABCNews Instagram: https://www.instagram.com/abcnews TikTok: https://www.tiktok.com/@abcnews X: https://twitter.com/ABC Threads: https://www.threads.net/@abcnews WhatsApp: https://whatsapp.com/channel/0029VajTNakKWEKkXoAPIR11 LinkedIn: https://www.linkedin.com/company/abcnews"
+        }
+    ]
+}

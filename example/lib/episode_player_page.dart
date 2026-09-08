@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_youtube_player/flutter_youtube_player.dart';
 
@@ -294,6 +295,24 @@ class _PlayerControls extends StatelessWidget {
               onPressed: controller.pause,
               icon: const Icon(Icons.pause),
             ),
+            if (defaultTargetPlatform == TargetPlatform.iOS)
+              IconButton(
+                tooltip: value.isPictureInPicture ? '退出画中画' : '画中画',
+                onPressed: value.isPictureInPictureAvailable
+                    ? () async {
+                        if (value.isPictureInPicture) {
+                          await controller.exitPictureInPicture();
+                        } else {
+                          await controller.enterPictureInPicture();
+                        }
+                      }
+                    : null,
+                icon: Icon(
+                  value.isPictureInPicture
+                      ? Icons.picture_in_picture_alt
+                      : Icons.picture_in_picture,
+                ),
+              ),
             PopupMenuButton<double>(
               tooltip: '播放速度',
               icon: const Icon(Icons.speed),
