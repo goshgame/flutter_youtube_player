@@ -871,8 +871,8 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    _isAppSuspended = state != AppLifecycleState.resumed;
-    _syncNativePlayerMode();
+    // _isAppSuspended = state != AppLifecycleState.resumed;
+    // _syncNativePlayerMode();
   }
 
   void _handleRouteAnimationStatus(AnimationStatus status) {
