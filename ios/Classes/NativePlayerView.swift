@@ -147,6 +147,7 @@ final class NativePlayerView: NSObject,
   private var channel: FlutterMethodChannel?
   private var progressObservation: NSKeyValueObservation?
   private var videoId: String?
+  private var playbackSessionId: Int?
   private var wantsToPlay = false
   private var wantsMuted = false
   private var startSeconds = 0.0
@@ -157,6 +158,7 @@ final class NativePlayerView: NSObject,
   private var destroyed = false
   private var suspended = false
   private var prewarming = false
+  private var retainingHandover = false
   private var duration = 0.0
   private var playerState: Int?
   private var resumePlayAttempt = 0
@@ -191,6 +193,7 @@ final class NativePlayerView: NSObject,
   }
 
   var isInvalidated: Bool { invalidated }
+  var isRetainingHandover: Bool { retainingHandover }
 
   init(frame: CGRect) {
     rootView = UIView(frame: frame)
@@ -245,13 +248,13 @@ final class NativePlayerView: NSObject,
     messenger: FlutterBinaryMessenger
   ) {
     precondition(!invalidated && channel == nil)
-    wantsToPlay = false
+    if !retainingHandover { wantsToPlay = false }
     wantsMuted = false
     startSeconds = 0
     suspended = false
     prewarming = false
     cancelResumePlayRetry()
-    webView.isHidden = false
+    if !retainingHandover { webView.isHidden = false }
     channel = FlutterMethodChannel(
       name: "flutter_youtube_player/player_\(viewId)",
       binaryMessenger: messenger
@@ -268,14 +271,25 @@ final class NativePlayerView: NSObject,
       code: "pip_cancelled",
       message: "The player was detached before Picture in Picture changed"
     )
-    wantsToPlay = false
     cancelResumePlayRetry()
-    evaluate("requestPause()")
+    if !retainingHandover {
+      wantsToPlay = false
+      evaluate("requestPause()")
+    }
     // 仍在 PiP 转换中的 WebView 不可租给另一个播放器。
     if discardAfterUnbind { invalidated = true }
     channel?.setMethodCallHandler(nil)
     channel = nil
     prewarming = false
+  }
+
+  func discardRetainedPlayback(sessionId: Int) -> Bool {
+    guard playbackSessionId == sessionId, retainingHandover else { return false }
+    retainingHandover = false
+    wantsToPlay = false
+    cancelResumePlayRetry()
+    evaluate("requestPause()")
+    return true
   }
 
   private func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -292,14 +306,37 @@ final class NativePlayerView: NSObject,
       }
       ready = messageHandler.isReady
       wantsMuted = arguments?["muted"] as? Bool ?? false
-      load(
-        id,
-        autoplay: arguments?["autoplay"] as? Bool ?? false,
-        startSeconds: Self.validStartSeconds(
-          (arguments?["startSeconds"] as? NSNumber)?.doubleValue
-        ),
-        forceReload: true
-      )
+      let autoplay = arguments?["autoplay"] as? Bool ?? false
+      let sessionId = (arguments?["sessionId"] as? NSNumber)?.intValue
+      if arguments?["reuseCurrentVideo"] as? Bool == true,
+         let sessionId, playbackSessionId == sessionId,
+         videoId == id, prepared, ready {
+        // 同一 WKWebView 已加载目标视频；恢复当前 iframe，避免重新加载。
+        wantsToPlay = autoplay
+        retainingHandover = false
+        suspended = false
+        prewarming = false
+        webView.alpha = 1
+        webView.isHidden = false
+        hideLoadingCover()
+        if autoplay {
+          if playerState != 1 { startResumePlayRetry() }
+        } else {
+          evaluate("requestPause()")
+        }
+        event("ready")
+        if let playerState { event("state", values: ["value": playerState]) }
+      } else {
+        playbackSessionId = sessionId
+        load(
+          id,
+          autoplay: autoplay,
+          startSeconds: Self.validStartSeconds(
+            (arguments?["startSeconds"] as? NSNumber)?.doubleValue
+          ),
+          forceReload: true
+        )
+      }
     case "load":
       guard let id = arguments?["videoId"] as? String, Self.isValidVideoId(id) else {
         result(FlutterError(
@@ -336,20 +373,30 @@ final class NativePlayerView: NSObject,
       let seconds = (arguments?["seconds"] as? NSNumber)?.doubleValue ?? 0
       if seconds.isFinite { evaluate("seekTo(\(max(seconds, 0)),true)") }
     case "suspend":
+      retainingHandover = false
       suspended = true
       prewarming = false
       applyDeferredSuspension()
+    case "parkForHandover":
+      // 保留 WKWebView 播放，只遮住画面以避免返回动画继续合成视频层。
+      retainingHandover = wantsToPlay && !suspended
+      webView.alpha = 0
+      showLoadingCover()
     case "prewarm":
+      retainingHandover = false
       prewarming = true
+      webView.alpha = 1
       // suspend 发出的 JavaScript 可能在 WKWebView 再次可运行后才落地；
       // 预热时重新暂停，保证迟到的 pause 不会覆盖随后的 resume 播放请求。
       applyDeferredSuspension()
     case "resume":
+      retainingHandover = false
       let shouldPlay = arguments?["play"] as? Bool ?? wantsToPlay
       wantsToPlay = shouldPlay
       suspended = false
       prewarming = false
       webView.isHidden = false
+      webView.alpha = 1
       if ready { loadingCover.isHidden = true }
       if shouldPlay && !keepsPictureInPictureAlive { startResumePlayRetry() }
       else { cancelResumePlayRetry() }
@@ -409,6 +456,9 @@ final class NativePlayerView: NSObject,
     forceReload: Bool
   ) {
     guard !invalidated else { return }
+    retainingHandover = false
+    webView.alpha = 1
+    webView.isHidden = false
     cancelPendingPictureInPicture(code: "pip_cancelled", message: "The video is changing")
     cancelResumePlayRetry()
     let changed = id != videoId

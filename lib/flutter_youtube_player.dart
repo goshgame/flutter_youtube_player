@@ -160,6 +160,10 @@ class YouTubePlayerValue {
 
 /// 管理 YouTube 播放器状态，并通过平台通道向原生播放器发送命令。
 class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
+  static int _nextPlaybackSessionId = 0;
+  static const MethodChannel _handoverChannel =
+      MethodChannel('flutter_youtube_player/handover');
+
   FlutterYouTubePlayerController({
     required String initialVideoId,
     this.autoPlay = false,
@@ -185,7 +189,9 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
   }
 
   final bool autoPlay;
+  final int _playbackSessionId = ++_nextPlaybackSessionId;
   MethodChannel? _channel;
+  int? _attachedViewId;
 
   // 原生视图尚未创建时，先缓存调用；通道连接后再按原顺序发送。
   final List<_PendingCommand> _pending = [];
@@ -194,6 +200,14 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
   late bool _wantsToPlay;
   late bool _wantsMuted;
   bool _isChannelActivating = false;
+  bool _reuseCurrentVideoOnNextAttach = false;
+  bool _retainedWithoutView = false;
+  Future<void>? _parkRequest;
+  Duration? _resumePositionOnNextAttach;
+  int _handoverRevision = 0;
+  int _playbackStateEventRevision = 0;
+  // ready/progress 可能沿用上一宿主的 playing 值；交接方据此识别真正的新状态事件。
+  int get playbackStateEventRevision => _playbackStateEventRevision;
   Object? _pictureInPictureRequest;
   bool _isEnteringPictureInPicture = false;
 
@@ -224,6 +238,7 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
     _channel?.setMethodCallHandler(null);
     final channel = MethodChannel('$_channelPrefix$viewId');
     _channel = channel;
+    _attachedViewId = viewId;
     channel.setMethodCallHandler(_handleNativeEvent);
     return channel;
   }
@@ -236,15 +251,23 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
   }
 
   Future<void> _activatePlatform(MethodChannel channel) async {
+    final handoverRevision = _handoverRevision;
     try {
       // 原生端会复用 WebView，必须先绑定当前视频，再补发挂载前缓存的命令。
       await channel.invokeMethod<void>('activate', <String, Object>{
         'videoId': value.videoId,
         'autoplay': _wantsToPlay,
-        'startSeconds': _seconds(value.position),
+        'startSeconds': _seconds(_resumePositionOnNextAttach ?? value.position),
         'muted': _wantsMuted,
+        'sessionId': _playbackSessionId,
+        'reuseCurrentVideo': _reuseCurrentVideoOnNextAttach,
       });
       if (!_disposed && identical(channel, _channel)) {
+        if (handoverRevision == _handoverRevision) {
+          _retainedWithoutView = false;
+          _reuseCurrentVideoOnNextAttach = false;
+          _resumePositionOnNextAttach = null;
+        }
         _isChannelActivating = false;
         _flushPending(channel);
       }
@@ -261,11 +284,14 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
     }
   }
 
-  void _detach() {
+  void _detach(int? viewId) {
+    // 旧 PlatformView 的销毁可能晚于新宿主挂载，不能摘掉新视图的通道。
+    if (viewId == null || viewId != _attachedViewId) return;
     _pictureInPictureRequest = null;
     _isEnteringPictureInPicture = false;
     _channel?.setMethodCallHandler(null);
     _channel = null;
+    _attachedViewId = null;
     _isChannelActivating = false;
   }
 
@@ -337,10 +363,40 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
     return _invoke('reload');
   }
 
-  Future<void> suspend() => _invoke('suspend');
+  Future<void> suspend() {
+    _retainedWithoutView = false;
+    return _invoke('suspend');
+  }
+
+  /// 返回手势仅遮住画面，原生 WebView 继续持有播放会话直到新宿主接管。
+  Future<void> parkForHandover() {
+    final channel = _channel;
+    if (_disposed || channel == null) {
+      return Future<void>.value();
+    }
+    final revision = ++_handoverRevision;
+    _retainedWithoutView = true;
+    // activate 尚未返回时仍要排入同一通道，避免退出路由时漏掉保活命令。
+    return _parkRequest = channel.invokeMethod<void>('parkForHandover').catchError(
+      (Object error) {
+        if (revision == _handoverRevision) _retainedWithoutView = false;
+        debugPrint('YouTube playback park failed: $error');
+      },
+    );
+  }
+
+  /// 路由交接时下一视图优先接管已加载的同一视频，失效时仍正常重载。
+  void reuseCurrentVideoOnNextAttach({required Duration resumePosition}) {
+    _handoverRevision++;
+    _reuseCurrentVideoOnNextAttach = true;
+    _resumePositionOnNextAttach = resumePosition;
+  }
+
   Future<void> _prewarm() => _invoke('prewarm');
-  Future<void> resume() =>
-      _invoke('resume', <String, Object>{'play': _wantsToPlay});
+  Future<void> resume() {
+    _retainedWithoutView = false;
+    return _invoke('resume', <String, Object>{'play': _wantsToPlay});
+  }
   Future<void> exitFullscreen() => _invoke('exitFullscreen');
 
   /// 在 iOS 上进入系统画中画。
@@ -428,6 +484,7 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
     if (autoplay != null) _wantsToPlay = autoplay;
     _channel?.setMethodCallHandler(null);
     _channel = null;
+    _attachedViewId = null;
     _isChannelActivating = false;
     _nativeInitialOverlayDismissed = false;
     _viewGeneration++;
@@ -478,6 +535,7 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
         );
       case 'state':
         final code = (event['value'] as num?)?.toInt() ?? -999;
+        _playbackStateEventRevision++;
         if (event['hideInitialOverlay'] == true) {
           _nativeInitialOverlayDismissed = true;
         }
@@ -589,6 +647,15 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
 
   @override
   void dispose() {
+    if (_retainedWithoutView) {
+      unawaited((_parkRequest ?? Future<void>.value()).then((_) =>
+          _handoverChannel.invokeMethod<void>(
+            'discard',
+            <String, Object>{'sessionId': _playbackSessionId},
+          )).catchError((Object error) {
+        debugPrint('YouTube retained playback discard failed: $error');
+      }));
+    }
     _disposed = true;
     for (final command in _pending) {
       if (!command.completer.isCompleted) command.completer.complete();
@@ -596,6 +663,7 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
     _pending.clear();
     _channel?.setMethodCallHandler(null);
     _channel = null;
+    _attachedViewId = null;
     _isChannelActivating = false;
     super.dispose();
   }
@@ -615,6 +683,7 @@ class FlutterYouTubePlayer extends StatefulWidget {
     required this.controller,
     this.backgroundColor = Colors.black,
     this.showPlayPauseButton = true,
+    this.continuePlaybackOnRouteExit = false,
     this.embeddingDisabledOverlay,
     this.gestureRecognizers = const <Factory<OneSequenceGestureRecognizer>>{},
     super.key,
@@ -628,6 +697,9 @@ class FlutterYouTubePlayer extends StatefulWidget {
   /// 默认为 `true`；使用自定义播放控件时可设为 `false`。
   final bool showPlayPauseButton;
 
+  /// 退出当前路由时保留原生播放，只遮住视频画面以减轻转场绘制。
+  final bool continuePlaybackOnRouteExit;
+
   /// 禁止嵌入时覆盖在播放器上的自定义内容。
   ///
   /// 默认不显示覆盖内容。
@@ -640,7 +712,7 @@ class FlutterYouTubePlayer extends StatefulWidget {
   State<FlutterYouTubePlayer> createState() => _FlutterYouTubePlayerState();
 }
 
-enum _NativePlayerMode { active, prewarmed, suspended }
+enum _NativePlayerMode { active, prewarmed, parked, suspended }
 
 class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
     with WidgetsBindingObserver {
@@ -650,6 +722,7 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
 
   late int _viewGeneration;
   late Key _platformViewKey;
+  int? _platformViewId;
   Timer? _loadingIndicatorTimer;
   Timer? _playPauseButtonTimer;
   Animation<double>? _routeAnimation;
@@ -732,7 +805,8 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.controller == widget.controller) return;
     oldWidget.controller.removeListener(_handleControllerChange);
-    oldWidget.controller._detach();
+    oldWidget.controller._detach(_platformViewId);
+    _platformViewId = null;
     _viewGeneration = widget.controller._viewGeneration;
     _platformViewKey = UniqueKey();
     _loadingIndicatorTimer?.cancel();
@@ -877,7 +951,11 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
 
   void _handleRouteAnimationStatus(AnimationStatus status) {
     // 路由反向动画开始时立即冻结原生画面，避免视频纹理与返回动画竞争。
-    final isExiting = status == AnimationStatus.reverse;
+    // 已确认退出的 dismissed 状态仍要保活到旧 PlatformView 完成解绑。
+    final isExiting = status == AnimationStatus.reverse ||
+        (widget.continuePlaybackOnRouteExit &&
+            _isRouteExiting &&
+            status == AnimationStatus.dismissed);
     if (_isRouteExiting == isExiting) return;
     _isRouteExiting = isExiting;
     _syncNativePlayerMode();
@@ -920,11 +998,14 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
     final keepAliveForPictureInPicture =
         widget.controller.value.isPictureInPicture ||
         widget.controller._isEnteringPictureInPicture;
+    final isRouteExiting = _isRouteExiting || isInteractiveRouteExiting;
     final desiredMode =
-        (_isAppSuspended && !keepAliveForPictureInPicture) ||
-            _isRouteExiting ||
-            isInteractiveRouteExiting
+        (_isAppSuspended && !keepAliveForPictureInPicture)
         ? _NativePlayerMode.suspended
+        : isRouteExiting
+        ? widget.continuePlaybackOnRouteExit
+              ? _NativePlayerMode.parked
+              : _NativePlayerMode.suspended
         : _isRouteCovered
         ? isCoverRouteRevealing
               ? _NativePlayerMode.prewarmed
@@ -938,6 +1019,8 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
         unawaited(widget.controller.resume());
       case _NativePlayerMode.prewarmed:
         unawaited(widget.controller._prewarm());
+      case _NativePlayerMode.parked:
+        unawaited(widget.controller.parkForHandover());
       case _NativePlayerMode.suspended:
         unawaited(widget.controller.suspend());
     }
@@ -959,24 +1042,33 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
     );
     WidgetsBinding.instance.removeObserver(this);
     widget.controller.removeListener(_handleControllerChange);
-    widget.controller._detach();
+    widget.controller._detach(_platformViewId);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final controller = widget.controller;
     final view = switch (defaultTargetPlatform) {
       TargetPlatform.android => AndroidView(
         key: _platformViewKey,
         viewType: _viewType,
         gestureRecognizers: widget.gestureRecognizers,
-        onPlatformViewCreated: widget.controller._attach,
+        onPlatformViewCreated: (viewId) {
+          if (!mounted || !identical(widget.controller, controller)) return;
+          _platformViewId = viewId;
+          controller._attach(viewId);
+        },
       ),
       TargetPlatform.iOS => UiKitView(
         key: _platformViewKey,
         viewType: _viewType,
         gestureRecognizers: widget.gestureRecognizers,
-        onPlatformViewCreated: widget.controller._attach,
+        onPlatformViewCreated: (viewId) {
+          if (!mounted || !identical(widget.controller, controller)) return;
+          _platformViewId = viewId;
+          controller._attach(viewId);
+        },
       ),
       _ => throw UnsupportedError(
         'flutter_youtube_player supports Android and iOS only',

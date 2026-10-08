@@ -14,8 +14,13 @@ final class PlayerViewPool {
     }
   }
 
+  private weak var parkingView: UIView?
   private var entries: [Entry] = []
   private var nextIdleOrder = 0
+
+  init(parkingView: UIView?) {
+    self.parkingView = parkingView
+  }
 
   func acquire(frame: CGRect) -> NativePlayerView {
     dispatchPrecondition(condition: .onQueue(.main))
@@ -23,6 +28,7 @@ final class PlayerViewPool {
     let entry: Entry
     if let idle = entries.filter({ !$0.isInUse }).max(by: { $0.idleOrder < $1.idleOrder }) {
       entry = idle
+      entry.playerView.rootView.removeFromSuperview()
       entry.playerView.rootView.frame = frame
     } else {
       entry = Entry(NativePlayerView(frame: frame))
@@ -37,14 +43,36 @@ final class PlayerViewPool {
     guard let entry = entries.first(where: { $0.playerView === playerView }),
           entry.isInUse else { return }
     entry.isInUse = false
+    let currentWindow = playerView.rootView.window
     playerView.rootView.removeFromSuperview()
+    let attachedParkingView = parkingView?.window == nil ? nil : parkingView
+    if playerView.isRetainingHandover && !playerView.isInvalidated,
+       let host = attachedParkingView ?? currentWindow {
+      // 保持 WKWebView 附着在窗口树，交接期间仅移到可见区域外。
+      let size = playerView.rootView.bounds.size
+      playerView.rootView.frame.origin = CGPoint(
+        x: -max(size.width, 1),
+        y: -max(size.height, 1)
+      )
+      host.addSubview(playerView.rootView)
+    }
     nextIdleOrder += 1
     entry.idleOrder = nextIdleOrder
     if playerView.isInvalidated {
       entries.removeAll { $0 === entry }
-      playerView.destroy()
+      destroyIdlePlayerView(playerView)
     } else {
       trimIdlePlayerViewsIfNeeded()
+    }
+  }
+
+  func discardRetainedPlayback(sessionId: Int) {
+    dispatchPrecondition(condition: .onQueue(.main))
+    entries.forEach { entry in
+      if entry.playerView.discardRetainedPlayback(sessionId: sessionId),
+         !entry.isInUse {
+        entry.playerView.rootView.removeFromSuperview()
+      }
     }
   }
 
@@ -53,7 +81,7 @@ final class PlayerViewPool {
       !$0.isInUse && $0.playerView.isInvalidated
     }
     entries.removeAll { entry in invalid.contains { $0 === entry } }
-    invalid.forEach { $0.playerView.destroy() }
+    invalid.forEach { destroyIdlePlayerView($0.playerView) }
   }
 
   private func trimIdlePlayerViewsIfNeeded() {
@@ -62,7 +90,12 @@ final class PlayerViewPool {
         .filter({ !$0.isInUse })
         .min(by: { $0.idleOrder < $1.idleOrder }) else { return }
       entries.removeAll { $0 === oldest }
-      oldest.playerView.destroy()
+      destroyIdlePlayerView(oldest.playerView)
     }
+  }
+
+  private func destroyIdlePlayerView(_ playerView: NativePlayerView) {
+    playerView.rootView.removeFromSuperview()
+    playerView.destroy()
   }
 }

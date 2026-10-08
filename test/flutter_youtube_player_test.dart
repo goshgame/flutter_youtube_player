@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -478,6 +480,162 @@ void main() {
     debugDefaultTargetPlatformOverride = null;
   });
 
+  testWidgets('parks a retained player during route exit and discards it on close', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    final controller = FlutterYouTubePlayerController(
+      initialVideoId: 'r9UYbCxus3s',
+      autoPlay: true,
+    );
+    const playerChannel = MethodChannel('flutter_youtube_player/player_109');
+    const handoverChannel = MethodChannel('flutter_youtube_player/handover');
+    final calls = <String>[];
+    int? discardedSessionId;
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(playerChannel, (call) async {
+      calls.add(call.method);
+      return null;
+    });
+    messenger.setMockMethodCallHandler(handoverChannel, (call) async {
+      if (call.method == 'discard') {
+        discardedSessionId = (call.arguments as Map)['sessionId'] as int;
+      }
+      return null;
+    });
+
+    await tester.pumpWidget(MaterialApp(
+      home: Builder(
+        builder: (context) => TextButton(
+          onPressed: () => Navigator.of(context).push<void>(
+            MaterialPageRoute<void>(
+              builder: (_) => Scaffold(
+                body: FlutterYouTubePlayer(
+                  controller: controller,
+                  continuePlaybackOnRouteExit: true,
+                ),
+              ),
+            ),
+          ),
+          child: const Text('open'),
+        ),
+      ),
+    ));
+    await tester.tap(find.text('open'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    tester.widget<AndroidView>(find.byType(AndroidView)).onPlatformViewCreated!(109);
+    await tester.pump();
+
+    Navigator.of(tester.element(find.byType(FlutterYouTubePlayer))).pop();
+    await tester.pump();
+    expect(calls, contains('parkForHandover'));
+    expect(calls, isNot(contains('suspend')));
+    await tester.pump(const Duration(milliseconds: 500));
+    controller.dispose();
+    await tester.pump();
+    expect(discardedSessionId, isNotNull);
+
+    messenger.setMockMethodCallHandler(playerChannel, null);
+    messenger.setMockMethodCallHandler(handoverChannel, null);
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('激活回调未返回时仍发送交接保活命令', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    final controller = FlutterYouTubePlayerController(
+      initialVideoId: 'r9UYbCxus3s',
+      autoPlay: true,
+    );
+    const channel = MethodChannel('flutter_youtube_player/player_111');
+    const handoverChannel = MethodChannel('flutter_youtube_player/handover');
+    final activation = Completer<void>();
+    final calls = <String>[];
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      calls.add(call.method);
+      if (call.method == 'activate') await activation.future;
+      return null;
+    });
+    messenger.setMockMethodCallHandler(handoverChannel, (call) async => null);
+
+    await tester.pumpWidget(MaterialApp(
+      home: FlutterYouTubePlayer(controller: controller),
+    ));
+    tester.widget<AndroidView>(find.byType(AndroidView))
+        .onPlatformViewCreated!(111);
+    await controller.parkForHandover();
+    expect(calls, containsAllInOrder(<String>['activate', 'parkForHandover']));
+
+    activation.complete();
+    await tester.pumpWidget(const SizedBox.shrink());
+    controller.dispose();
+    messenger.setMockMethodCallHandler(channel, null);
+    messenger.setMockMethodCallHandler(handoverChannel, null);
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('cancelled back gesture resumes a parked player', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    final controller = FlutterYouTubePlayerController(
+      initialVideoId: 'r9UYbCxus3s',
+      autoPlay: true,
+    );
+    const channel = MethodChannel('flutter_youtube_player/player_110');
+    final calls = <String>[];
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      calls.add(call.method);
+      return null;
+    });
+
+    await tester.pumpWidget(MaterialApp(
+      theme: ThemeData(platform: TargetPlatform.iOS),
+      home: Builder(
+        builder: (context) => TextButton(
+          onPressed: () => Navigator.of(context).push<void>(
+            CupertinoPageRoute<void>(
+              builder: (_) => Scaffold(
+                body: SizedBox(
+                  width: 400,
+                  height: 225,
+                  child: FlutterYouTubePlayer(
+                    controller: controller,
+                    continuePlaybackOnRouteExit: true,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          child: const Text('open'),
+        ),
+      ),
+    ));
+    await tester.tap(find.text('open'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    tester.widget<AndroidView>(find.byType(AndroidView)).onPlatformViewCreated!(110);
+    await tester.pump();
+
+    final navigator =
+        Navigator.of(tester.element(find.byType(FlutterYouTubePlayer)));
+    navigator.userGestureInProgressNotifier.value = true;
+    await tester.pump();
+    expect(calls, contains('parkForHandover'));
+    navigator.userGestureInProgressNotifier.value = false;
+    await tester.pump();
+    expect(find.byType(FlutterYouTubePlayer), findsOneWidget);
+    expect(calls.last, 'resume');
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    controller.dispose();
+    messenger.setMockMethodCallHandler(channel, null);
+    debugDefaultTargetPlatformOverride = null;
+  });
+
   testWidgets(
     'prewarms while the covering route exits and then resumes playback',
     (tester) async {
@@ -724,12 +882,13 @@ void main() {
         }
         await pendingPlay;
 
-        expect(activation?.arguments, <String, Object>{
-          'videoId': 'r9UYbCxus3s',
-          'autoplay': true,
-          'startSeconds': 1.25,
-          'muted': false,
-        });
+        final arguments = activation?.arguments as Map;
+        expect(arguments['videoId'], 'r9UYbCxus3s');
+        expect(arguments['autoplay'], isTrue);
+        expect(arguments['startSeconds'], 1.25);
+        expect(arguments['muted'], isFalse);
+        expect(arguments['sessionId'], isA<int>());
+        expect(arguments['reuseCurrentVideo'], isFalse);
         expect(calls, <String>['activate', 'play']);
 
         await tester.pumpWidget(const SizedBox.shrink());
@@ -739,4 +898,127 @@ void main() {
       },
     );
   }
+
+  testWidgets('旧视图迟到的解绑不会移除新视图通道', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    final controller = FlutterYouTubePlayerController(
+      initialVideoId: 'r9UYbCxus3s',
+      autoPlay: true,
+    );
+    final oldActivation = Completer<void>();
+    const oldChannel = MethodChannel('flutter_youtube_player/player_78');
+    const newChannel = MethodChannel('flutter_youtube_player/player_79');
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    final newCalls = <String>[];
+    MethodCall? oldActivateCall;
+    MethodCall? newActivation;
+    messenger.setMockMethodCallHandler(oldChannel, (call) async {
+      if (call.method == 'activate') {
+        oldActivateCall = call;
+        await oldActivation.future;
+      }
+      return null;
+    });
+    messenger.setMockMethodCallHandler(newChannel, (call) async {
+      newCalls.add(call.method);
+      if (call.method == 'activate') newActivation = call;
+      return null;
+    });
+
+    Widget host({required bool old, required bool next}) => MaterialApp(
+      home: Stack(children: [
+        if (old)
+          SizedBox(
+            key: const ValueKey('old'),
+            width: 200,
+            height: 200,
+            child: FlutterYouTubePlayer(controller: controller),
+          ),
+        if (next)
+          SizedBox(
+            key: const ValueKey('next'),
+            width: 200,
+            height: 200,
+            child: FlutterYouTubePlayer(controller: controller),
+          ),
+      ]),
+    );
+
+    await tester.pumpWidget(host(old: true, next: false));
+    tester.widget<AndroidView>(find.byType(AndroidView))
+        .onPlatformViewCreated!(78);
+    controller.reuseCurrentVideoOnNextAttach(
+      resumePosition: const Duration(seconds: 10),
+    );
+    await tester.pumpWidget(host(old: true, next: true));
+    tester.widgetList<AndroidView>(find.byType(AndroidView)).last
+        .onPlatformViewCreated!(79);
+    await tester.pumpWidget(host(old: false, next: true));
+    oldActivation.complete();
+    await tester.pump();
+    await controller.pause();
+
+    expect((newActivation?.arguments as Map)['reuseCurrentVideo'], isTrue);
+    expect((newActivation?.arguments as Map)['startSeconds'], 10.0);
+    expect((newActivation?.arguments as Map)['sessionId'],
+        (oldActivateCall?.arguments as Map)['sessionId']);
+    expect(newCalls, <String>['activate', 'pause']);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    messenger.setMockMethodCallHandler(oldChannel, null);
+    messenger.setMockMethodCallHandler(newChannel, null);
+    controller.dispose();
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('替换 controller 后忽略旧平台视图的创建回调', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    final oldController = FlutterYouTubePlayerController(
+      initialVideoId: 'r9UYbCxus3s',
+    );
+    final newController = FlutterYouTubePlayerController(
+      initialVideoId: 'M7lc1UVf-VE',
+    );
+    const oldChannel = MethodChannel('flutter_youtube_player/player_80');
+    const newChannel = MethodChannel('flutter_youtube_player/player_81');
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    final oldCalls = <String>[];
+    final newCalls = <String>[];
+    messenger.setMockMethodCallHandler(oldChannel, (call) async {
+      oldCalls.add(call.method);
+      return null;
+    });
+    messenger.setMockMethodCallHandler(newChannel, (call) async {
+      newCalls.add(call.method);
+      return null;
+    });
+
+    Widget host(FlutterYouTubePlayerController controller) => MaterialApp(
+      home: SizedBox(
+        width: 200,
+        height: 200,
+        child: FlutterYouTubePlayer(controller: controller),
+      ),
+    );
+
+    await tester.pumpWidget(host(oldController));
+    final oldView = tester.widget<AndroidView>(find.byType(AndroidView));
+    await tester.pumpWidget(host(newController));
+    oldView.onPlatformViewCreated!(80);
+    tester.widget<AndroidView>(find.byType(AndroidView))
+        .onPlatformViewCreated!(81);
+    await tester.pump();
+
+    expect(oldCalls, isEmpty);
+    expect(newCalls, <String>['activate']);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    messenger.setMockMethodCallHandler(oldChannel, null);
+    messenger.setMockMethodCallHandler(newChannel, null);
+    oldController.dispose();
+    newController.dispose();
+    debugDefaultTargetPlatformOverride = null;
+  });
 }

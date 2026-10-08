@@ -1,9 +1,10 @@
 # flutter_youtube_player
 
 A native-view Flutter wrapper around the YouTube IFrame API for Android and
-iOS. Every mounted player owns an independent WebView, while the most recently
-disposed player is paused and retained for the next detail/mini-player handoff.
-Older idle players are destroyed. The embedded view
+iOS. Every mounted player leases a WebView. During a marked detail/mini-player
+handoff, the same native WebView stays attached offscreen and keeps playing until
+the next lease takes over; ordinary disposal pauses it. Older idle players are
+destroyed. The embedded view
 keeps touch input enabled for 360-degree video navigation while suppressing
 long presses before they reach the embedded YouTube frame.
 
@@ -80,10 +81,11 @@ try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
 
 Android Picture in Picture is not implemented yet.
 
-The widget pauses its native player while the app is inactive, while its route
-is covered, and during route removal. A retained player is detached from its
-old method channel and listener before another Flutter view can acquire it; the
-new channel activates the requested video before queued commands are replayed.
+The widget pauses its native player while the app is inactive or its route is
+covered. With `continuePlaybackOnRouteExit`, route removal parks the native
+view offscreen without pausing it. A retained player is detached from its old
+method channel and listener before another Flutter view can acquire it; the new
+channel activates the requested video before queued commands are replayed.
 
 Before playback starts, the player automatically displays YouTube's high
 resolution thumbnail derived from the current video ID. Other thumbnail sizes

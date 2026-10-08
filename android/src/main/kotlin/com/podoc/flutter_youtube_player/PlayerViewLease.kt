@@ -4,6 +4,7 @@ import android.app.Activity
 import android.view.View
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.platform.PlatformView
+import java.lang.ref.WeakReference
 
 internal class PlayerViewLease(
   private val pool: PlayerViewPool,
@@ -13,6 +14,7 @@ internal class PlayerViewLease(
   hostActivity: Activity?,
 ) : PlatformView {
   private var disposed = false
+  private val activity = WeakReference(hostActivity)
 
   init {
     playerView.bind(messenger, viewId, hostActivity)
@@ -24,6 +26,6 @@ internal class PlayerViewLease(
     if (disposed) return
     disposed = true
     playerView.unbind()
-    pool.releasePlayerView(playerView)
+    pool.releasePlayerView(playerView, activity.get())
   }
 }

@@ -10,6 +10,13 @@
   disables embedding, and uncover native playback errors instead of leaving a
   black loading surface visible.
 
+## 0.2.3
+
+* Retain an active Android or iOS WebView between marked player handoffs without
+  pausing the video, and reuse its current YouTube iframe on the next lease.
+* Keep route-pop gesture cancellation and delayed platform-view callbacks from
+  discarding a newer playback owner.
+
 ## 0.1.1
 
 * Refactor Android and iOS around the native demo's explicit player-view pool:

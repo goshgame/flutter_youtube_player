@@ -3,10 +3,11 @@ import UIKit
 
 final class PlayerViewFactory: NSObject, FlutterPlatformViewFactory {
   private let messenger: FlutterBinaryMessenger
-  private let pool = PlayerViewPool()
+  private let pool: PlayerViewPool
 
-  init(messenger: FlutterBinaryMessenger) {
+  init(messenger: FlutterBinaryMessenger, pool: PlayerViewPool) {
     self.messenger = messenger
+    self.pool = pool
     super.init()
   }
 

@@ -57,6 +57,7 @@ internal class NativePlayerView(
   private var channel: MethodChannel? = null
   private var hostActivity = WeakReference<Activity>(null)
   private var videoId: String? = null
+  private var playbackSessionId: Int? = null
   private var wantsToPlay = false
   private var wantsMuted = false
   private var startSeconds = 0.0
@@ -66,6 +67,7 @@ internal class NativePlayerView(
   private var rendererGone = false
   private var suspended = false
   private var prewarming = false
+  private var retainingHandover = false
   private var shellVideoId: String? = null
   private var duration = 0.0
   private var playerState: Int? = null
@@ -88,6 +90,7 @@ internal class NativePlayerView(
   }
 
   val isInvalidated: Boolean get() = destroyed || rendererGone
+  val isRetainingHandover: Boolean get() = retainingHandover
 
   init {
     rootView.addView(webView, FrameLayout.LayoutParams(-1, -1))
@@ -104,26 +107,39 @@ internal class NativePlayerView(
     channel = MethodChannel(messenger, "flutter_youtube_player/player_$viewId").also {
       it.setMethodCallHandler(this)
     }
-    wantsToPlay = false
+    if (!retainingHandover) wantsToPlay = false
     wantsMuted = false
     startSeconds = 0.0
     suspended = false
     prewarming = false
     cancelResumePlayRetry()
-    webView.visibility = View.VISIBLE
-    webView.onResume()
+    if (!retainingHandover) {
+      webView.visibility = View.VISIBLE
+      webView.onResume()
+    }
   }
 
   fun unbind() {
     if (channel == null) return
-    wantsToPlay = false
     cancelResumePlayRetry()
-    evaluate("requestPause()")
+    if (!retainingHandover) {
+      wantsToPlay = false
+      evaluate("requestPause()")
+    }
     hideCustomView()
     channel?.setMethodCallHandler(null)
     channel = null
     hostActivity.clear()
     prewarming = false
+  }
+
+  fun discardRetainedPlayback(sessionId: Int): Boolean {
+    if (playbackSessionId != sessionId || !retainingHandover) return false
+    retainingHandover = false
+    wantsToPlay = false
+    cancelResumePlayRetry()
+    evaluate("requestPause()")
+    return true
   }
 
   override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
@@ -135,12 +151,34 @@ internal class NativePlayerView(
           return
         }
         wantsMuted = call.argument<Boolean>("muted") ?: false
-        load(
-          id!!,
-          call.argument<Boolean>("autoplay") ?: false,
-          validStartSeconds(call.argument<Number>("startSeconds")?.toDouble()),
-          true,
-        )
+        val autoplay = call.argument<Boolean>("autoplay") ?: false
+        val sessionId = call.argument<Int>("sessionId")
+        if (call.argument<Boolean>("reuseCurrentVideo") == true &&
+          sessionId != null && playbackSessionId == sessionId &&
+          videoId == id && prepared && ready
+        ) {
+          // 同一 WebView 已加载目标视频；只恢复播放，避免重复装载 iframe。
+          wantsToPlay = autoplay
+          retainingHandover = false
+          suspended = false
+          prewarming = false
+          webView.alpha = 1f
+          webView.visibility = View.VISIBLE
+          webView.onResume()
+          loadingCover.visibility = View.GONE
+          if (autoplay && playerState != 1) startResumePlayRetry()
+          else if (!autoplay) evaluate("requestPause()")
+          event("ready")
+          playerState?.let { event("state", "value" to it) }
+        } else {
+          playbackSessionId = sessionId
+          load(
+            id!!,
+            autoplay,
+            validStartSeconds(call.argument<Number>("startSeconds")?.toDouble()),
+            true,
+          )
+        }
       }
       "load" -> {
         val id = call.argument<String>("videoId")
@@ -176,6 +214,7 @@ internal class NativePlayerView(
         if (seconds.isFinite()) evaluate("seekTo(${seconds.coerceAtLeast(0.0)},true)")
       }
       "suspend" -> {
+        retainingHandover = false
         suspended = true
         prewarming = false
         cancelResumePlayRetry()
@@ -184,8 +223,16 @@ internal class NativePlayerView(
         showLoadingCover()
         webView.visibility = View.INVISIBLE
       }
+      "parkForHandover" -> {
+        // 只遮住原生画面，WebView 和 iframe 继续运行；取消手势由 resume 恢复。
+        retainingHandover = wantsToPlay && !suspended
+        webView.alpha = 0f
+        showLoadingCover()
+      }
       "prewarm" -> {
+        retainingHandover = false
         prewarming = true
+        webView.alpha = 1f
         webView.visibility = View.VISIBLE
         webView.onResume()
         // suspend() 中的 JavaScript 可能直到 WebView 恢复后才执行；这里再次暂停，
@@ -194,11 +241,13 @@ internal class NativePlayerView(
         if (ready) loadingCover.visibility = View.GONE
       }
       "resume" -> {
+        retainingHandover = false
         val shouldPlay = call.argument<Boolean>("play") ?: wantsToPlay
         wantsToPlay = shouldPlay
         suspended = false
         prewarming = false
         webView.visibility = View.VISIBLE
+        webView.alpha = 1f
         webView.onResume()
         if (ready) loadingCover.visibility = View.GONE
         if (shouldPlay) startResumePlayRetry() else cancelResumePlayRetry()
@@ -249,6 +298,9 @@ internal class NativePlayerView(
     forceReload: Boolean,
   ) {
     if (destroyed || rendererGone) return
+    retainingHandover = false
+    webView.alpha = 1f
+    webView.visibility = View.VISIBLE
     cancelResumePlayRetry()
     val changed = id != videoId
     videoId = id
