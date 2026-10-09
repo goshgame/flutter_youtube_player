@@ -195,6 +195,11 @@ final class NativePlayerView: NSObject,
   var isInvalidated: Bool { invalidated }
   var isRetainingHandover: Bool { retainingHandover }
 
+  func canTakeOver(sessionId: Int, videoId: String) -> Bool {
+    !invalidated && !keepsPictureInPictureAlive &&
+      playbackSessionId == sessionId && self.videoId == videoId
+  }
+
   init(frame: CGRect) {
     rootView = UIView(frame: frame)
     rootView.backgroundColor = .black
@@ -264,8 +269,9 @@ final class NativePlayerView: NSObject,
     }
   }
 
-  func unbind() {
+  func unbind(retainingPlayback: Bool = false) {
     guard channel != nil else { return }
+    if retainingPlayback { retainingHandover = wantsToPlay && !suspended }
     let discardAfterUnbind = keepsPictureInPictureAlive
     cancelPendingPictureInPicture(
       code: "pip_cancelled",
@@ -319,13 +325,12 @@ final class NativePlayerView: NSObject,
         webView.alpha = 1
         webView.isHidden = false
         hideLoadingCover()
-        if autoplay {
-          if playerState != 1 { startResumePlayRetry() }
-        } else {
-          evaluate("requestPause()")
-        }
+        if !autoplay { evaluate("requestPause()") }
         event("ready")
-        if let playerState { event("state", values: ["value": playerState]) }
+        if let playerState {
+          event("state", values: ["value": playerState, "isSnapshot": true])
+        }
+        confirmPlaybackAfterHandover()
       } else {
         playbackSessionId = sessionId
         load(
@@ -856,6 +861,26 @@ final class NativePlayerView: NSObject,
     cancelResumePlayRetry()
     let generation = resumePlayRetryGeneration
     scheduleResumePlayAttempt(after: 0, generation: generation)
+  }
+
+  private func confirmPlaybackAfterHandover() {
+    let generation = resumePlayRetryGeneration
+    let currentChannel = channel
+    // 已在播放的 iframe 不一定再发 StateChange，直接查询当前状态完成交接确认。
+    webView.evaluateJavaScript("player ? player.getPlayerState() : null") { [weak self] value, error in
+      guard let self, !self.invalidated, self.channel != nil,
+            self.channel === currentChannel,
+            generation == self.resumePlayRetryGeneration else { return }
+      if let error {
+        NSLog("YouTube handover state query failed: %@", error.localizedDescription)
+      } else if let state = (value as? NSNumber)?.intValue {
+        self.playerState = state
+        self.event("state", values: ["value": state])
+        if state == 1 { self.cancelResumePlayRetry() }
+        if state == 1 || !self.wantsToPlay { return }
+      }
+      if self.wantsToPlay && !self.suspended { self.startResumePlayRetry() }
+    }
   }
 
   private func scheduleResumePlayAttempt(

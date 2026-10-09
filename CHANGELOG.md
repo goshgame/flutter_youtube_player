@@ -10,6 +10,16 @@
   disables embedding, and uncover native playback errors instead of leaving a
   black loading surface visible.
 
+## 0.2.5
+
+* Acquire iOS handoff players by playback session and give each platform-view
+  lease its own container, so delayed teardown cannot detach or pause a newer
+  owner. Reserve retained players for their sessions and discard stale retained
+  instances when a handoff falls back to a replacement.
+* Query the current IFrame state when reusing an iOS player. Cached state
+  snapshots update the UI without counting as fresh playback confirmation, and
+  cancelled or superseded handoffs ignore delayed query results.
+
 ## 0.2.3
 
 * Retain an active Android or iOS WebView between marked player handoffs without

@@ -206,7 +206,7 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
   Duration? _resumePositionOnNextAttach;
   int _handoverRevision = 0;
   int _playbackStateEventRevision = 0;
-  // ready/progress 可能沿用上一宿主的 playing 值；交接方据此识别真正的新状态事件。
+  // 缓存快照只同步 UI；交接确认必须来自真实回调或原生状态查询。
   int get playbackStateEventRevision => _playbackStateEventRevision;
   Object? _pictureInPictureRequest;
   bool _isEnteringPictureInPicture = false;
@@ -535,7 +535,7 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
         );
       case 'state':
         final code = (event['value'] as num?)?.toInt() ?? -999;
-        _playbackStateEventRevision++;
+        if (event['isSnapshot'] != true) _playbackStateEventRevision++;
         if (event['hideInitialOverlay'] == true) {
           _nativeInitialOverlayDismissed = true;
         }
@@ -1063,6 +1063,13 @@ class _FlutterYouTubePlayerState extends State<FlutterYouTubePlayer>
       TargetPlatform.iOS => UiKitView(
         key: _platformViewKey,
         viewType: _viewType,
+        // 原生创建时即按会话接管，避免等待旧 PlatformView 的 deinit。
+        creationParams: <String, Object>{
+          'sessionId': controller._playbackSessionId,
+          'videoId': controller.value.videoId,
+          'reuseCurrentVideo': controller._reuseCurrentVideoOnNextAttach,
+        },
+        creationParamsCodec: const StandardMessageCodec(),
         gestureRecognizers: widget.gestureRecognizers,
         onPlatformViewCreated: (viewId) {
           if (!mounted || !identical(widget.controller, controller)) return;

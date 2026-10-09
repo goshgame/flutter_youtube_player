@@ -20,9 +20,16 @@ final class PlayerViewFactory: NSObject, FlutterPlatformViewFactory {
     viewIdentifier viewId: Int64,
     arguments args: Any?
   ) -> FlutterPlatformView {
-    PlayerViewLease(
+    let parameters = args as? [String: Any]
+    let reuse = parameters?["reuseCurrentVideo"] as? Bool == true
+    return PlayerViewLease(
       pool: pool,
-      playerView: pool.acquire(frame: frame),
+      playerView: pool.acquire(
+        frame: frame,
+        viewId: viewId,
+        sessionId: reuse ? (parameters?["sessionId"] as? NSNumber)?.intValue : nil,
+        videoId: reuse ? parameters?["videoId"] as? String : nil
+      ),
       viewId: viewId,
       messenger: messenger
     )

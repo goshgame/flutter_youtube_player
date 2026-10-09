@@ -1,12 +1,14 @@
 import UIKit
 
 final class PlayerViewPool {
-  // kapt 同一时刻只保留一个详情页或迷你播放器，缓存一个空闲 WebView 即可覆盖切换场景。
+  // 限制空闲缓存；交接时优先按播放会话接管，不依赖回收顺序。
   private static let maximumIdlePlayerCount = 3
 
   private final class Entry {
     let playerView: NativePlayerView
-    var isInUse = false
+    var ownerViewId: Int64?
+    var isInUse: Bool { ownerViewId != nil }
+    var isAvailable: Bool { !isInUse && !playerView.isRetainingHandover }
     var idleOrder = 0
 
     init(_ playerView: NativePlayerView) {
@@ -22,27 +24,40 @@ final class PlayerViewPool {
     self.parkingView = parkingView
   }
 
-  func acquire(frame: CGRect) -> NativePlayerView {
+  func acquire(frame: CGRect, viewId: Int64, sessionId: Int?, videoId: String?) -> NativePlayerView {
     dispatchPrecondition(condition: .onQueue(.main))
     removeInvalidIdlePlayers()
     let entry: Entry
-    if let idle = entries.filter({ !$0.isInUse }).max(by: { $0.idleOrder < $1.idleOrder }) {
+    if let sessionId, let videoId,
+       let retained = entries.first(where: {
+         $0.playerView.canTakeOver(sessionId: sessionId, videoId: videoId)
+       }) {
+      entry = retained
+      // Flutter 原生释放可晚于新宿主创建，主动交还旧通道后接管同一 WebView。
+      if entry.isInUse { entry.playerView.unbind(retainingPlayback: true) }
+    } else if let idle = entries.filter({ $0.isAvailable }).max(by: { $0.idleOrder < $1.idleOrder }) {
       entry = idle
-      entry.playerView.rootView.removeFromSuperview()
-      entry.playerView.rootView.frame = frame
     } else {
       entry = Entry(NativePlayerView(frame: frame))
       entries.append(entry)
     }
-    entry.isInUse = true
+    entry.playerView.rootView.removeFromSuperview()
+    entry.playerView.rootView.frame = frame
+    entry.ownerViewId = viewId
+    if let sessionId {
+      // 无法接管时也终止同会话的旧保活实例，避免备用加载留下后台声音。
+      discardRetainedPlayback(sessionId: sessionId, excluding: entry.playerView)
+    }
     return entry.playerView
   }
 
-  func release(_ playerView: NativePlayerView) {
+  func release(_ playerView: NativePlayerView, viewId: Int64) {
     dispatchPrecondition(condition: .onQueue(.main))
     guard let entry = entries.first(where: { $0.playerView === playerView }),
-          entry.isInUse else { return }
-    entry.isInUse = false
+          entry.ownerViewId == viewId else { return }
+    // 旧租约迟到释放时不能解绑、暂停或移走新宿主的播放器。
+    playerView.unbind()
+    entry.ownerViewId = nil
     let currentWindow = playerView.rootView.window
     playerView.rootView.removeFromSuperview()
     let attachedParkingView = parkingView?.window == nil ? nil : parkingView
@@ -66,14 +81,16 @@ final class PlayerViewPool {
     }
   }
 
-  func discardRetainedPlayback(sessionId: Int) {
+  func discardRetainedPlayback(sessionId: Int, excluding playerView: NativePlayerView? = nil) {
     dispatchPrecondition(condition: .onQueue(.main))
     entries.forEach { entry in
-      if entry.playerView.discardRetainedPlayback(sessionId: sessionId),
+      if entry.playerView !== playerView,
+         entry.playerView.discardRetainedPlayback(sessionId: sessionId),
          !entry.isInUse {
         entry.playerView.rootView.removeFromSuperview()
       }
     }
+    trimIdlePlayerViewsIfNeeded()
   }
 
   private func removeInvalidIdlePlayers() {
@@ -85,9 +102,10 @@ final class PlayerViewPool {
   }
 
   private func trimIdlePlayerViewsIfNeeded() {
-    while entries.filter({ !$0.isInUse }).count > Self.maximumIdlePlayerCount {
+    // 保活实例仍属于原播放会话，不进入通用空闲缓存，也不被 LRU 提前销毁。
+    while entries.filter({ $0.isAvailable }).count > Self.maximumIdlePlayerCount {
       guard let oldest = entries
-        .filter({ !$0.isInUse })
+        .filter({ $0.isAvailable })
         .min(by: { $0.idleOrder < $1.idleOrder }) else { return }
       entries.removeAll { $0 === oldest }
       destroyIdlePlayerView(oldest.playerView)
