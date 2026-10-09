@@ -12,6 +12,9 @@
 
 ## 0.2.3
 
+* Confirm iOS handoff playback after the new host enters its window and lays
+  out. Keep bounded recovery active until playback progress advances, so a
+  delayed WebKit pause does not leave an expanded mini-player stopped.
 * Acquire iOS handoff players by playback session and give each platform-view
   lease its own container, so delayed teardown cannot detach or pause a newer
   owner. Reserve retained players for their sessions and discard stale retained

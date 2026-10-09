@@ -206,7 +206,7 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
   Duration? _resumePositionOnNextAttach;
   int _handoverRevision = 0;
   int _playbackStateEventRevision = 0;
-  // 缓存快照只同步 UI；交接确认必须来自真实回调或原生状态查询。
+  // 快照和交接中尚未确认的 playing 只同步 UI，不提前结束交接保护。
   int get playbackStateEventRevision => _playbackStateEventRevision;
   Object? _pictureInPictureRequest;
   bool _isEnteringPictureInPicture = false;
@@ -535,7 +535,9 @@ class FlutterYouTubePlayerController extends ValueNotifier<YouTubePlayerValue> {
         );
       case 'state':
         final code = (event['value'] as num?)?.toInt() ?? -999;
-        if (event['isSnapshot'] != true) _playbackStateEventRevision++;
+        if (event['isSnapshot'] != true && event['isHandoverPending'] != true) {
+          _playbackStateEventRevision++;
+        }
         if (event['hideInitialOverlay'] == true) {
           _nativeInitialOverlayDismissed = true;
         }

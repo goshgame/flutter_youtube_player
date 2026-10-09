@@ -140,7 +140,7 @@ final class NativePlayerView: NSObject,
     })();
     """#
 
-  let rootView: UIView
+  let rootView: PlayerHostView
   private let webView: WKWebView
   private let messageHandler: WeakScriptMessageHandler
   private let loadingCover: UIView
@@ -164,6 +164,7 @@ final class NativePlayerView: NSObject,
   private var resumePlayAttempt = 0
   private var resumePlayRetryGeneration = 0
   private var resumePlayRetryWorkItem: DispatchWorkItem?
+  private var handoverConfirmation: PlayerHandoverConfirmation?
   private var pictureInPictureAvailable = false
   private var pictureInPictureActive = false
   private var pendingPictureInPictureTarget: Bool?
@@ -201,7 +202,7 @@ final class NativePlayerView: NSObject,
   }
 
   init(frame: CGRect) {
-    rootView = UIView(frame: frame)
+    rootView = PlayerHostView(frame: frame)
     rootView.backgroundColor = .black
     messageHandler = WeakScriptMessageHandler()
     let configuration = WKWebViewConfiguration()
@@ -224,6 +225,11 @@ final class NativePlayerView: NSObject,
     loadingCover.backgroundColor = .black
     super.init()
 
+    rootView.onLayoutInWindow = { [weak self] in
+      guard let self, self.handoverConfirmation != nil,
+            self.resumePlayRetryWorkItem == nil else { return }
+      self.scheduleResumePlayAttempt(after: 0, generation: self.resumePlayRetryGeneration)
+    }
     messageHandler.delegate = self
     webView.isUserInteractionEnabled = false
     webView.allowsLinkPreview = false
@@ -330,7 +336,8 @@ final class NativePlayerView: NSObject,
         if let playerState {
           event("state", values: ["value": playerState, "isSnapshot": true])
         }
-        confirmPlaybackAfterHandover()
+        if autoplay { startResumePlayRetry(confirmHandover: true) }
+        else { cancelResumePlayRetry() }
       } else {
         playbackSessionId = sessionId
         load(
@@ -384,6 +391,7 @@ final class NativePlayerView: NSObject,
       applyDeferredSuspension()
     case "parkForHandover":
       // 保留 WKWebView 播放，只遮住画面以避免返回动画继续合成视频层。
+      cancelResumePlayRetry()
       retainingHandover = wantsToPlay && !suspended
       webView.alpha = 0
       showLoadingCover()
@@ -403,7 +411,9 @@ final class NativePlayerView: NSObject,
       webView.isHidden = false
       webView.alpha = 1
       if ready { loadingCover.isHidden = true }
-      if shouldPlay && !keepsPictureInPictureAlive { startResumePlayRetry() }
+      if shouldPlay && !keepsPictureInPictureAlive {
+        startResumePlayRetry(confirmHandover: handoverConfirmation != nil)
+      }
       else { cancelResumePlayRetry() }
     case "mute":
       wantsMuted = true
@@ -703,8 +713,10 @@ final class NativePlayerView: NSObject,
       let exitedBufferingToUnstarted = playerState == 3 && state == -1
       playerState = state
       if state == 1 {
-        cancelResumePlayRetry()
+        if handoverConfirmation == nil { cancelResumePlayRetry() }
         if !suspended || prewarming { hideLoadingCover() }
+      } else if state == 0 {
+        cancelResumePlayRetry()
       } else if exitedBufferingToUnstarted && (!suspended || prewarming) {
         // Upcoming videos can return to UNSTARTED after buffering. Reveal the
         // WebView's scheduled state without changing the WebView visibility.
@@ -712,6 +724,7 @@ final class NativePlayerView: NSObject,
       }
       event("state", values: [
         "value": state,
+        "isHandoverPending": state == 1 && handoverConfirmation != nil,
         "hideInitialOverlay": exitedBufferingToUnstarted,
       ])
     case "VideoData":
@@ -857,29 +870,46 @@ final class NativePlayerView: NSObject,
     loadingCover.isHidden = true
   }
 
-  private func startResumePlayRetry() {
+  private func startResumePlayRetry(confirmHandover: Bool = false) {
     cancelResumePlayRetry()
+    if confirmHandover { handoverConfirmation = PlayerHandoverConfirmation() }
     let generation = resumePlayRetryGeneration
     scheduleResumePlayAttempt(after: 0, generation: generation)
   }
 
-  private func confirmPlaybackAfterHandover() {
-    let generation = resumePlayRetryGeneration
+  private func confirmPlaybackAfterHandover(generation: Int) {
     let currentChannel = channel
-    // 已在播放的 iframe 不一定再发 StateChange，直接查询当前状态完成交接确认。
-    webView.evaluateJavaScript("player ? player.getPlayerState() : null") { [weak self] value, error in
+    // 查询在新宿主挂载后执行；连续两次 playing 且进度前进才结束交接恢复。
+    let query = "player ? {state: player.getPlayerState(), position: player.getCurrentTime()} : null"
+    webView.evaluateJavaScript(query) { [weak self] value, error in
       guard let self, !self.invalidated, self.channel != nil,
             self.channel === currentChannel,
             generation == self.resumePlayRetryGeneration else { return }
-      if let error {
-        NSLog("YouTube handover state query failed: %@", error.localizedDescription)
-      } else if let state = (value as? NSNumber)?.intValue {
-        self.playerState = state
-        self.event("state", values: ["value": state])
-        if state == 1 { self.cancelResumePlayRetry() }
-        if state == 1 || !self.wantsToPlay { return }
+      guard self.rootView.isReadyForPlayback else {
+        self.handoverConfirmation = PlayerHandoverConfirmation()
+        self.resumePlayRetryWorkItem = nil
+        return
       }
-      if self.wantsToPlay && !self.suspended { self.startResumePlayRetry() }
+      if let error {
+        self.handoverConfirmation = PlayerHandoverConfirmation()
+        NSLog("YouTube handover state query failed: %@", error.localizedDescription)
+      } else if let values = value as? [String: Any],
+                let state = (values["state"] as? NSNumber)?.intValue,
+                let position = (values["position"] as? NSNumber)?.doubleValue {
+        self.playerState = state
+        let confirmed = self.handoverConfirmation?.observe(state: state, position: position) == true
+        self.event("state", values: ["value": state, "isHandoverPending": state == 1 && !confirmed])
+        if confirmed || state == 0 {
+          self.cancelResumePlayRetry()
+          return
+        }
+        // playing 时只确认进度，不重复发送 play，避免打断连续播放。
+        if state == 2 || state == -1 || state == 5 { self.evaluate("requestPlay()") }
+      } else {
+        self.handoverConfirmation = PlayerHandoverConfirmation()
+        NSLog("YouTube handover state query returned no playback state")
+      }
+      self.scheduleResumePlayAttempt(after: Self.resumePlayRetryInterval, generation: generation)
     }
   }
 
@@ -901,7 +931,17 @@ final class NativePlayerView: NSObject,
         self.cancelResumePlayRetry()
         return
       }
+      if self.handoverConfirmation != nil && !self.rootView.isReadyForPlayback {
+        // 未挂载时不消耗重试次数，布局回调会重新启动同一代任务。
+        self.handoverConfirmation = PlayerHandoverConfirmation()
+        self.resumePlayRetryWorkItem = nil
+        return
+      }
       self.resumePlayAttempt += 1
+      if self.handoverConfirmation != nil {
+        self.confirmPlaybackAfterHandover(generation: generation)
+        return
+      }
       self.evaluate("requestPlay()")
       self.scheduleResumePlayAttempt(
         after: Self.resumePlayRetryInterval,
@@ -917,6 +957,7 @@ final class NativePlayerView: NSObject,
     resumePlayRetryWorkItem?.cancel()
     resumePlayRetryWorkItem = nil
     resumePlayAttempt = 0
+    handoverConfirmation = nil
   }
 
   func destroy() {
