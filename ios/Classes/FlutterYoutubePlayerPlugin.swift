@@ -3,7 +3,7 @@ import UIKit
 
 public final class FlutterYoutubePlayerPlugin: NSObject, FlutterPlugin {
   public static func register(with registrar: FlutterPluginRegistrar) {
-    let pool = PlayerViewPool(parkingView: registrar.viewController()?.view)
+    let pool = PlayerViewPool(parkingView: registrar.viewController?.view)
     let handoverChannel = FlutterMethodChannel(
       name: "flutter_youtube_player/handover",
       binaryMessenger: registrar.messenger()

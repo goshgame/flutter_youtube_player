@@ -1,6 +1,6 @@
 name: flutter_youtube_player
 description: Native Android and iOS YouTube IFrame player views for Flutter.
-version: 0.2.3
+version: 0.2.4
 homepage: https://github.com/podoc/flutter_youtube_player
 
 environment:
